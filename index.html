@@ -1,0 +1,1238 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Atlas de RL</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky instrument bar + tabbed workspace; detail drawer slides in from the right (full screen on phones). */
+:root{
+  --bg:#f3f5f8; --panel:#ffffff; --ink:#14213d; --ink2:#3b4a63; --mut:#6b7891; --line:#dde3ec; --soft:#e9eef6;
+  --acc:#256abf; --acc-soft:#dbe8fa; --marl:#0b7a72; --marl-soft:#d3ece9; --warm:#8a5a12; --warm-soft:#f6ecd9; --bad:#b4372f;
+  --f-ui:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --f-read:"Source Serif 4",Georgia,serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1420; --panel:#151d2c; --ink:#e8edf6; --ink2:#c0cadb; --mut:#8a96ad; --line:#26324a; --soft:#1c2638;
+  --acc:#6da7ec; --acc-soft:#1d3456; --marl:#4fc2b6; --marl-soft:#143a37; --warm:#e0b46a; --warm-soft:#3a2d17; --bad:#ef7d74; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1420; --panel:#151d2c; --ink:#e8edf6; --ink2:#c0cadb; --mut:#8a96ad; --line:#26324a; --soft:#1c2638;
+  --acc:#6da7ec; --acc-soft:#1d3456; --marl:#4fc2b6; --marl-soft:#143a37; --warm:#e0b46a; --warm-soft:#3a2d17; --bad:#ef7d74; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--panel)}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:18px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.brand b{font-weight:800;font-size:18px;letter-spacing:-.01em}
+.brand span{font-family:var(--f-mono);font-size:11px;color:var(--mut)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+nav.tabs button{border:0;background:none;padding:7px 11px;border-radius:7px;color:var(--ink2);font-weight:500;white-space:nowrap;cursor:pointer}
+nav.tabs button:hover{background:var(--soft)}
+nav.tabs button[aria-current="true"]{background:var(--ink);color:var(--panel)}
+main{padding-block:22px 60px}
+h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+h2{font-size:19px;font-weight:700;margin:0 0 10px;text-wrap:balance}
+h3{font-size:15px;font-weight:700;margin:0 0 6px}
+.lead{color:var(--ink2);max-width:68ch;margin:0 0 18px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.stat .v{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat .l{color:var(--mut);font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--ink2);border:1px solid transparent;white-space:nowrap}
+.chip.alg{background:var(--acc-soft);color:var(--ink);cursor:pointer}
+.chip.marl{background:var(--marl-soft);color:var(--ink)}
+.chip.ft{background:var(--warm-soft);color:var(--ink)}
+.chip.real{border-color:var(--marl);color:var(--marl);background:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--acc)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.ghost{border-color:transparent;background:var(--soft)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.filters input[type=search]{flex:1 1 260px;min-width:0;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.filters select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%}
+.filters label.ck{display:flex;gap:5px;align-items:center;font-size:13px;color:var(--ink2)}
+.count{font-family:var(--f-mono);font-size:12px;color:var(--mut);margin:0 0 8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
+.row:hover{border-color:var(--acc)}
+.row .t{font-weight:600;line-height:1.3}
+.row .m{font-family:var(--f-mono);font-size:11.5px;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap}
+.more{margin-top:12px}
+.split{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px}
+@media (min-width:821px){.split.guide{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}
+@media (max-width:820px){.split{grid-template-columns:1fr}.reco{position:static}}
+@media (max-width:700px){nav.tabs{flex-basis:100%;order:3}}
+.branches{display:flex;flex-direction:column;gap:2px;max-height:72vh;overflow:auto;position:sticky;top:76px}
+.branches .lv{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:10px 6px 3px}
+.branches button{text-align:left;border:0;background:none;padding:6px 8px;border-radius:7px;cursor:pointer;color:var(--ink2);display:flex;justify-content:space-between;gap:8px}
+.branches button:hover{background:var(--soft)}
+.branches button[aria-current="true"]{background:var(--acc-soft);color:var(--ink);font-weight:600}
+.branches small{font-family:var(--f-mono);color:var(--mut)}
+@media (max-width:820px){.branches{position:static;max-height:240px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.card:hover{border-color:var(--acc)}
+.card .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card .o{font-family:var(--f-mono);font-size:11px;color:var(--mut)}
+.card p{margin:0;color:var(--ink2);font-size:13px}
+.n{font-family:var(--f-mono);font-size:11.5px;white-space:nowrap;color:var(--acc)}
+.new{font-family:var(--f-mono);font-size:10px;color:var(--warm)}
+.figure{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:#fff;margin:0 0 14px}
+.figure img{display:block;max-width:none;width:1400px}
+.figure.fit img{width:100%;max-width:100%}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,16,28,.35);z-index:40}
+aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(680px,100%);z-index:41;background:var(--panel);border-left:1px solid var(--line);
+  overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) calc(30px + env(safe-area-inset-bottom,0px)) 22px;box-shadow:-12px 0 30px rgba(0,0,0,.12)}
+.drawer .close{position:sticky;top:0;float:right;margin:-4px -6px 0 8px}
+.drawer h2{font-size:20px;line-height:1.25}
+.abs{font-family:var(--f-read);font-size:15px;line-height:1.6;color:var(--ink);max-width:68ch}
+dl.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;margin:8px 0 14px}
+dl.kv dt{color:var(--mut);font-size:12.5px}
+dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:520px){dl.kv{grid-template-columns:1fr}dl.kv dt{margin-top:6px}}
+.sec{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
+.tag-llm{font-family:var(--f-mono);font-size:10px;color:var(--warm);border:1px solid var(--warm);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:middle}
+.lin{display:flex;flex-direction:column;gap:6px}
+.lin button{display:flex;gap:8px;align-items:baseline;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 10px;cursor:pointer}
+.lin button:hover{border-color:var(--acc)}
+.lin .arrow{font-family:var(--f-mono);color:var(--mut);white-space:nowrap}
+.lin .why{color:var(--ink2);font-size:12.5px}
+/* bars */
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar-row{display:grid;grid-template-columns:150px minmax(0,1fr) 46px;gap:8px;align-items:center;font-size:12.5px}
+.bar-row .track{height:10px;background:var(--soft);border-radius:3px;overflow:hidden}
+.bar-row .fill{height:100%;background:var(--acc);border-radius:3px}
+.bar-row .val{font-family:var(--f-mono);font-size:11.5px;text-align:right;color:var(--ink2)}
+/* guide */
+.q{margin:0 0 14px}
+.q .ql{font-weight:600;margin:0 0 6px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts label{border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;background:var(--panel);font-size:13px}
+.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts input:checked+span{font-weight:600}
+.opts label:has(input:checked){background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.opts label:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
+.reco{position:sticky;top:76px}
+.reco .main{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:4px 0}
+.reco ul{margin:6px 0;padding-left:18px}
+.reco li{margin:3px 0}
+/* tutor */
+.chat{display:flex;flex-direction:column;gap:10px;min-height:280px;max-height:62vh;overflow:auto;padding:4px}
+.msg{max-width:88%;padding:10px 13px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.u{align-self:flex-end;background:var(--ink);color:var(--panel)}
+.msg.a{align-self:flex-start;background:var(--soft)}
+.msg.a .tools{font-family:var(--f-mono);font-size:11px;color:var(--mut);margin-top:6px}
+.composer{display:flex;gap:8px;margin-top:10px}
+.composer textarea{flex:1;min-width:0;resize:vertical;min-height:46px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.ctx{font-size:12.5px;color:var(--ink2);margin:0 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.note{font-size:12.5px;color:var(--mut)}
+.muted{color:var(--mut)}
+.mono{font-family:var(--f-mono)}
+.flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sp{justify-content:space-between}
+@media (prefers-reduced-motion:no-preference){aside.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}
+  [data-view]:not([hidden]){animation:rise .28s ease-out}@keyframes rise{from{transform:translateY(6px);opacity:.4}}
+  .card,.row{transition:border-color .15s,transform .15s}.card:hover{transform:translateY(-2px)}}
+/* lessons */
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.toc a{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:99px;color:var(--ink2);text-decoration:none}
+.toc a:hover{border-color:var(--acc);color:var(--acc)}
+.lesson section{margin:0 0 18px;scroll-margin-top:70px}
+.lesson h3{margin:0 0 8px}
+.lesson .prose ul{margin:0 0 10px;padding-left:20px}.lesson .prose li{margin:0 0 5px}
+.mblock{margin:0 0 12px}.mblock .formula{margin:0 0 4px;white-space:pre-wrap}.mblock p{margin:0;font-size:14px;color:var(--ink2);max-width:70ch}
+pre.pseudo{font-family:var(--f-mono);font-size:12.5px;line-height:1.55;background:var(--soft);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:0}
+ul.tips{margin:0;padding-left:20px;max-width:72ch}ul.tips li{margin:0 0 6px}
+.go2{border-left:3px solid var(--acc)}.go2 p{margin:0 0 8px;max-width:72ch}
+ol.reads{margin:0;padding-left:20px;font-size:14px;color:var(--ink2)}ol.reads li{margin:0 0 4px}
+details.glossbox{margin:0 0 16px}details.glossbox summary{cursor:pointer;font-weight:600}
+dl.gloss{margin:8px 0 0}dl.gloss > div{padding:6px 0;border-bottom:1px solid var(--line)}dl.gloss dt{font-weight:600}dl.gloss dd{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.done-note{color:var(--marl);font-weight:600}
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0 0 18px}
+.mod b{white-space:nowrap}.mod{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--panel)}
+.mod ol{margin:8px 0 0;padding-left:18px;font-size:13.5px}.mod li{margin:0 0 3px}.mod li.done a{color:var(--marl)}
+.prog.sm{height:4px;margin:6px 0 0}
+
+.lesson h2{font-size:24px;margin-bottom:4px}
+.lesson .prose{max-width:70ch}
+.lesson .prose p{margin:0 0 10px}
+.lesson .prose b{color:var(--ink)}
+.formula{font-family:var(--f-mono);background:var(--soft);border-radius:8px;padding:10px 12px;margin:10px 0;overflow-x:auto;white-space:nowrap}
+.demo{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:14px 0}
+.demo .ctrls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:10px 0 0}
+.demo .ctrls label{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink2)}
+.demo .ctrls input[type=range]{width:120px;accent-color:var(--acc)}
+.demo canvas{display:block;width:100%;max-width:640px;height:auto;border-radius:8px;background:var(--bg);margin-inline:auto}
+.twin canvas{max-width:100%}
+.demo .read{font-family:var(--f-mono);font-size:12px;color:var(--ink2);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+.twin{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cap{font-size:13.5px;color:var(--ink2);min-height:3.2em;margin-top:8px}
+.stepper svg{width:100%;height:auto;display:block}
+.stepper .node rect{fill:var(--panel);stroke:var(--line);stroke-width:1.5;transition:stroke .2s,fill .2s}
+.stepper .node.on rect{stroke:var(--acc);fill:var(--acc-soft)}
+.stepper .node text{fill:var(--ink);font:600 13px var(--f-ui)}
+.stepper .node .sub{fill:var(--mut);font:400 11px var(--f-ui)}
+.stepper path.edge{fill:none;stroke:var(--line);stroke-width:2;transition:stroke .2s}
+.stepper path.edge.on{stroke:var(--acc);stroke-width:2.5}
+.stepper path.edge.dash{stroke-dasharray:5 4}
+.stepper .elab{fill:var(--mut);font:500 11px var(--f-mono)}
+.stepper .elab.on{fill:var(--acc)}
+.stepper circle.pulse{fill:var(--acc)}
+.quiz{margin-top:16px}
+.quiz .qq{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:0 0 10px}
+.quiz .qq p{margin:0 0 8px;font-weight:600}
+.quiz .qopts{display:flex;flex-direction:column;gap:6px}
+.quiz button.o{text-align:left;border:1px solid var(--line);background:var(--bg);padding:8px 11px;border-radius:8px;cursor:pointer}
+.quiz button.o.ok{border-color:var(--marl);background:var(--marl-soft)}
+.quiz button.o.no{border-color:var(--bad)}
+.quiz .fb{font-size:13px;margin-top:6px;color:var(--ink2)}
+.done-mark{color:var(--marl);font-family:var(--f-mono);font-size:11px}
+.path{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:0 0 18px}
+.path .st{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--panel);cursor:pointer}
+.path .st:hover{border-color:var(--acc)}
+.path .st .k{font-family:var(--f-mono);font-size:11px;color:var(--mut)}
+.path .st.done{border-color:var(--marl)}
+.prog{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin:6px 0 14px}
+.prog > div{height:100%;background:var(--marl);transition:width .4s}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+</style>
+
+<header class="bar"><div class="wrap">
+  <div class="brand"><b>Atlas de RL</b><span id="brandsub">cargando datos…</span></div>
+  <nav class="tabs" id="tabs" aria-label="Secciones">
+    <button data-tab="inicio">Inicio</button>
+    <button data-tab="aprende">Aprende RL</button>
+    <button data-tab="mapa">Mapa de RL</button>
+    <button data-tab="papers">Papers</button>
+    <button data-tab="apps">Aplicaciones</button>
+    <button data-tab="surveys">Surveys</button>
+    <button data-tab="guia">Guía para elegir</button>
+    <button data-tab="tutor">Tutor</button>
+  </nav>
+</div></header>
+
+<main class="wrap" id="app">
+  <section data-view="inicio">
+    <p class="eyebrow">Review de aprendizaje por refuerzo · corpus al 15-10-2026</p>
+    <h1>Todo el estado del arte, conectado</h1>
+    <p class="lead">Empieza por el curso si estás partiendo, o recorre el mapa de RL de lo general a lo particular, entra a cada algoritmo para ver de dónde viene y qué papers lo usan, abre cualquier paper para leer su abstract y lo que se extrajo de él, y pregúntale al tutor cuando algo no te quede claro.</p>
+    <div class="stats" id="stats"></div>
+    <div class="panel" id="path" style="margin-bottom:18px"></div>
+    <div class="grid g3" id="home-cards"></div>
+    <div class="sec">
+      <div class="flex sp"><h2>El mapa completo</h2><button class="btn ghost" data-go="mapa">Abrir el mapa</button></div>
+      <div class="figure"><img src="img/mapa_rl.png" alt="Mapa general de RL: fundamentos, libre de modelo, basado en modelo, paradigmas transversales y multiagente" style="width:900px"></div>
+    </div>
+  </section>
+
+  <section data-view="aprende" hidden>
+    <p class="eyebrow">Curso interactivo · 25 lecciones en 5 módulos</p>
+    <h1>Aprende RL desde cero</h1>
+    <p class="lead">Un curso completo pensado para tu tesis: de los fundamentos a MARL y al Go2 real. Cada lección trae la idea, una simulación o animación, la matemática, el algoritmo paso a paso, consejos prácticos, qué significa para tu Go2, los papers del corpus que la usan, lecturas y 5 preguntas. Tu progreso se guarda en este navegador.</p>
+    <div class="split">
+      <div class="panel branches" id="lessons" aria-label="Lecciones"></div>
+      <article id="lesson" style="min-width:0"></article>
+    </div>
+  </section>
+
+  <section data-view="mapa" hidden>
+    <h1>Mapa de RL</h1>
+    <p class="lead">Cada rama del mapa con sus métodos. Toca un método para ver su idea, de qué algoritmo viene, qué vino después y cuántos papers de robótica móvil lo nombran.</p>
+    <div class="split">
+      <div class="panel branches" id="branches" aria-label="Ramas"></div>
+      <div style="min-width:0">
+        <div id="branch-head"></div>
+        <div id="branch-fig"></div>
+        <div class="grid g2" id="branch-items"></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-view="papers" hidden>
+    <h1>Papers de robótica móvil</h1>
+    <p class="lead">Los papers incluidos con confianza alta. Filtra, abre uno y sigue los enlaces a sus algoritmos o a papers parecidos.</p>
+    <div class="filters" id="pfilters">
+      <input type="search" id="q" placeholder="Buscar en título, palabras clave y abstract…" aria-label="Buscar papers">
+      <select id="f-stage" aria-label="Etapa"></select>
+      <select id="f-fam" aria-label="Familia"></select>
+      <select id="f-alg" aria-label="Algoritmo"></select>
+      <select id="f-rob" aria-label="Robot"></select>
+      <select id="f-val" aria-label="Validación"></select>
+      <select id="f-year" aria-label="Desde el año"></select>
+      <select id="f-sort" aria-label="Ordenar"><option value="c">Más citados</option><option value="y">Más recientes</option><option value="r">Citas por año</option></select>
+      <label class="ck"><input type="checkbox" id="f-marl"> Multiagente</label>
+      <label class="ck"><input type="checkbox" id="f-ft"> Con texto completo</label>
+      <button class="btn ghost" id="f-clear">Limpiar</button>
+    </div>
+    <p class="count" id="pcount"></p>
+    <div class="list" id="plist"></div>
+    <button class="btn more" id="pmore" hidden>Mostrar 50 más</button>
+  </section>
+
+  <section data-view="apps" hidden>
+    <h1>Aplicaciones de RL</h1>
+    <p class="lead">Nueve áreas. Los papers estimados ya están corregidos por precisión: la fracción que de verdad usa RL y es del área, según el extractor. Abajo, los papers confirmados con su problema, algoritmo y resultado.</p>
+    <div class="grid g3" id="areas"></div>
+    <div class="sec" id="area-detail"></div>
+  </section>
+
+  <section data-view="surveys" hidden>
+    <h1>Lo que dicen los surveys</h1>
+    <p class="lead">Reviews de robótica móvil y de las otras áreas, con su alcance, su taxonomía, los retos que nombran y las direcciones que proponen. Sale de los abstracts, así que conviene confirmarlo leyendo el review.</p>
+    <div class="filters">
+      <input type="search" id="sq" placeholder="Buscar en surveys…" aria-label="Buscar surveys">
+      <select id="s-area" aria-label="Área"></select>
+      <select id="s-theme" aria-label="Reto"></select>
+    </div>
+    <p class="count" id="scount"></p>
+    <div class="grid g2" id="slist"></div>
+  </section>
+
+  <section data-view="guia" hidden>
+    <h1>¿Qué algoritmo de RL me sirve?</h1>
+    <p class="lead">Responde lo que sepas de tu problema. La recomendación se actualiza al momento y muestra papers del corpus que ya usaron esa combinación.</p>
+    <div class="split guide">
+      <form class="panel" id="wiz"></form>
+      <div class="panel reco" id="reco"></div>
+    </div>
+  </section>
+
+  <section data-view="tutor" hidden>
+    <h1>Tutor</h1>
+    <p class="lead">Pregunta lo que quieras sobre RL, los algoritmos o los papers del corpus. El tutor puede buscar en los datos de esta página antes de responder, y te dice de dónde sale cada cosa.</p>
+    <div class="panel">
+      <div class="ctx" id="ctx"></div>
+      <div class="flex" id="starters" style="margin-bottom:10px"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="composer">
+        <textarea id="ask" placeholder="Ej.: ¿Por qué PPO domina en locomoción y SAC en control?" aria-label="Tu pregunta"></textarea>
+        <div class="flex" style="flex-direction:column"><button class="btn pri" id="send">Preguntar</button><button class="btn" id="stop" hidden>Detener</button></div>
+      </div>
+      <p class="note" id="tutor-note">Cada pregunta usa tu cuenta de Claude. La primera vez te pide permiso.</p>
+    </div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog"></aside>
+
+<script>
+(() => {
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = n => Number(n || 0).toLocaleString("es-CL");
+const pct = x => (x == null || isNaN(x)) ? "—" : Math.round(x * 100) + " %";
+let M, P = [], FT = [], APPS, SV = [], ABS = null, byId = new Map();
+const VAL = ["Simulación", "Robot real", "Sim2real"];
+const ROB = {wheeled:"Con ruedas",legged:"Con patas",uav:"UAV",humanoid:"Humanoide",swarm:"Enjambre",tracked:"Orugas",usv:"USV",auv:"AUV",mobile_manipulator:"Manipulador móvil",generic:"No dice",other:"Otro"};
+const state = { tab: "inicio", ctx: null, branch: null, pf: {}, shown: 50 };
+
+/* ---------------- data ---------------- */
+async function J(u){ const r = await fetch(u); if(!r.ok) throw new Error(u); return r.json(); }
+async function load(){
+  [M, P, FT, APPS, SV, LESSONS] = await Promise.all([J("meta.json"), J("papers.json"), J("fulltext.json"), J("apps.json"), J("surveys.json"), J("lessons.json")]);
+  P.forEach(p => byId.set(p.i, p));
+  $("#brandsub").textContent = `${fmt(M.n)} papers · ${M.cat.length} métodos`;
+  J("abstracts.json").then(a => { ABS = a; if (state.tab === "papers") renderPapers(); }).catch(() => {});
+  initAll();
+}
+const ent = i => M.ents[i];
+const entByName = n => M.ents.findIndex(e => e.n === n);
+
+/* ---------------- routing ---------------- */
+function go(tab){
+  state.tab = tab;
+  $$("[data-view]").forEach(s => s.hidden = s.dataset.view !== tab);
+  $$("#tabs button").forEach(b => b.setAttribute("aria-current", b.dataset.tab === tab));
+  try { history.replaceState(null, "", "#" + tab); } catch {}
+  try { localStorage.setItem("atlas-tab", tab); } catch {}
+  if (tab !== "aprende") { stopDemo(); stopDemo = () => {}; }
+  if (tab === "aprende" && !curLesson) { let l = null; try { l = localStorage.getItem("atlas-les"); } catch {} openLesson(LESSONS.some(x => x.id === l) || l === "__gloss" ? l : LESSONS[0].id); }
+  if (tab === "papers") renderPapers();
+  if (tab === "tutor") renderCtx();
+  window.scrollTo({top:0});
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab],[data-go],[data-paper],[data-alg],[data-cat],[data-area],[data-askctx],[data-filteralg]");
+  if (!t) return;
+  if (t.dataset.tab) go(t.dataset.tab);
+  else if (t.dataset.go) go(t.dataset.go);
+  else if (t.dataset.paper) openPaper(t.dataset.paper);
+  else if (t.dataset.alg) openAlg(+t.dataset.alg);
+  else if (t.dataset.cat) openCat(+t.dataset.cat);
+  else if (t.dataset.area) renderArea(t.dataset.area);
+  else if (t.dataset.filteralg) { closeDrawer(); resetPF(); $("#f-alg").value = t.dataset.filteralg; go("papers"); }
+  else if (t.dataset.askctx) { closeDrawer(); go("tutor"); $("#ask").focus(); }
+});
+
+/* ---------------- drawer ---------------- */
+function openDrawer(html){
+  const d = $("#drawer"); d.innerHTML = `<button class="btn ghost close" id="dclose" aria-label="Cerrar">Cerrar</button>` + html;
+  d.hidden = false; $("#scrim").hidden = false; d.scrollTop = 0; $("#dclose").focus();
+}
+function closeDrawer(){ $("#drawer").hidden = true; $("#scrim").hidden = true; }
+$("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("click", e => { if (e.target.id === "dclose") closeDrawer(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+/* ---------------- shared bits ---------------- */
+function algChips(p, max = 4){
+  const rl = p.a.filter(i => { const s = M.secs[ent(i).sec]; return !/Clásico|Representación|Exploración|Modelos fund/.test(s) || ent(i).core; });
+  const list = (rl.length ? rl : p.a).slice(0, max);
+  return list.map(i => `<span class="chip alg" data-alg="${i}">${esc(ent(i).n)}</span>`).join("");
+}
+function paperRow(p){
+  const st = p.s >= 0 ? M.stages[p.s] : "Sin etapa";
+  return `<div class="row" data-paper="${esc(p.i)}" tabindex="0" role="button">
+    <div class="t">${esc(p.t)}</div>
+    <div class="m"><span>${p.y ?? "—"}</span><span>${fmt(p.c)} citas</span>${p.q ? `<span>${esc(p.q)}</span>` : ""}<span>${esc((p.v || "").slice(0, 60))}</span></div>
+    <div class="chips"><span class="chip">${esc(st)}</span><span class="chip">${esc(ROB[M.robots[p.r]] || "")}</span>${p.m ? '<span class="chip marl">Multiagente</span>' : ""}${p.w === 1 || p.w === 2 ? `<span class="chip real">${VAL[p.w]}</span>` : ""}${p.x >= 0 ? '<span class="chip ft">Texto completo</span>' : ""}${algChips(p)}</div>
+  </div>`;
+}
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches(".row,.card,.st")) e.target.click(); });
+
+/* ---------------- inicio ---------------- */
+function renderHome(){
+  const real = P.filter(p => p.w === 1 || p.w === 2).length, known = P.filter(p => p.w >= 0).length;
+  $("#stats").innerHTML = [
+    [fmt(M.n), "papers de RL en robótica móvil"], [fmt(M.cat.length), "métodos en el mapa de RL"], [fmt(M.n_ft), "papers leídos en texto completo"],
+    [fmt(M.n_apps), "papers de 9 áreas de aplicación"], [fmt(M.n_sv), "surveys analizados"], [pct(real / known), "validan en robot real"]
+  ].map(([v, l]) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  const cards = [
+    ["aprende", "Aprende RL", "Diez lecciones con simulaciones que puedes tocar: del ciclo agente-entorno a multiagente y sim2real."],
+    ["mapa", "Mapa de RL", "De lo general a lo particular: fundamentos, libre de modelo, basado en modelo, transversales y multiagente, con sus genealogías."],
+    ["papers", "Papers", "Busca por algoritmo, etapa, robot o validación. Cada paper enlaza con sus algoritmos y con papers parecidos."],
+    ["guia", "Guía para elegir", "Describe tu problema y obtén qué familia y algoritmo usar, con ejemplos reales del corpus."],
+    ["apps", "Aplicaciones", "Medicina, rescate, energía, transporte, agricultura y más: cuánto RL hay y qué usan."],
+    ["surveys", "Surveys", "Retos y direcciones que nombran los reviews existentes."],
+    ["tutor", "Tutor", "Pregunta, pide explicaciones o un quiz. Busca en estos datos antes de responder."]];
+  $("#home-cards").innerHTML = cards.map(([t, h, p]) => `<div class="card" data-go="${t}" tabindex="0" role="button"><h3>${h}</h3><p>${p}</p></div>`).join("");
+}
+
+/* ---------------- mapa ---------------- */
+const FIG = {"2.":"arbol_valor","1.":"arbol_valor","3.":"arbol_politica","4.":"arbol_actor_critico","5.":"arbol_modelo","12.":"arbol_marl"};
+function branches(){ const m = new Map(); M.cat.forEach((c, i) => { if (!m.has(c.br)) m.set(c.br, {lvl: c.lvl, items: []}); m.get(c.br).items.push(i); }); return m; }
+function renderBranches(){
+  const B = branches(); let html = "", lv = "";
+  for (const [br, v] of B){ if (v.lvl !== lv){ lv = v.lvl; html += `<div class="lv">${esc(lv)}</div>`; }
+    html += `<button data-br="${esc(br)}" aria-current="${br === state.branch}"><span>${esc(br.replace(/^[\d.]+\s*/, ""))}</span><small>${v.items.length}</small></button>`; }
+  html += `<div class="lv">Transición</div><button data-br="__marl" aria-current="${state.branch === "__marl"}"><span>De un agente a multiagente</span><small>fig</small></button>`;
+  $("#branches").innerHTML = html;
+}
+$("#branches").addEventListener("click", e => { const b = e.target.closest("[data-br]"); if (b){ state.branch = b.dataset.br; renderBranch(); } });
+function renderBranch(){
+  renderBranches();
+  if (state.branch === "__marl"){
+    $("#branch-head").innerHTML = `<h2>De un agente a multiagente</h2><p class="lead">Cada familia de un solo agente tiene su extensión multiagente. El color dice el paradigma: independiente, CTDE o factorización del valor.</p>`;
+    $("#branch-fig").innerHTML = `<div class="figure fit"><img src="img/marl_transicion.png" alt="Transición de algoritmos de un agente a multiagente"></div>`;
+    $("#branch-items").innerHTML = ""; return;
+  }
+  const items = branches().get(state.branch).items;
+  const key = Object.keys(FIG).find(k => state.branch.startsWith(k) && (k !== "1." || state.branch.startsWith("1. ")));
+  $("#branch-head").innerHTML = `<p class="eyebrow">${esc(M.cat[items[0]].lvl)}</p><h2>${esc(state.branch)}</h2>`;
+  $("#branch-fig").innerHTML = key ? `<details open><summary class="note" style="cursor:pointer;margin-bottom:6px">Genealogía de la rama (desplaza para ver todo)</summary><div class="figure"><img src="img/${FIG[key]}.png" alt="Árbol genealógico de ${esc(state.branch)}"></div></details>` : "";
+  $("#branch-items").innerHTML = items.map(i => { const c = M.cat[i]; const n = c.e >= 0 ? ent(c.e).cnt : null;
+    return `<div class="card" data-cat="${i}" tabindex="0" role="button"><div class="h"><h3>${esc(c.n)}</h3>${n != null ? `<span class="n">${fmt(n)} papers</span>` : ""}</div>
+      <div class="o">${esc(c.o)}${c.new ? ' <span class="new">· agregado en la revisión</span>' : ""}</div><p>${esc(c.idea)}</p></div>`; }).join("");
+}
+function lineageFor(ei, name){
+  const ids = Object.entries(M.lin.nodes).filter(([k, v]) => (ei >= 0 && v.e === ei) || v.n.toLowerCase() === String(name).toLowerCase()).map(([k]) => k);
+  const par = M.lin.edges.filter(e => ids.includes(e.b)), ch = M.lin.edges.filter(e => ids.includes(e.a));
+  const btn = (k, l, dir) => { const nd = M.lin.nodes[k]; const ci = M.cat.findIndex(c => c.n.toLowerCase() === nd.n.toLowerCase() || (nd.e >= 0 && c.e === nd.e));
+    const attr = ci >= 0 ? `data-cat="${ci}"` : (nd.e >= 0 ? `data-alg="${nd.e}"` : "");
+    return `<button ${attr}><span class="arrow">${dir}</span><span><b>${esc(nd.n)}</b> <span class="muted mono">${esc(nd.meta)}</span><br><span class="why">${esc(l || "influencia")}</span></span></button>`; };
+  if (!par.length && !ch.length) return "";
+  return `<div class="sec"><h3>Genealogía</h3><div class="lin">${par.map(e => btn(e.a, e.l, "viene de ←")).join("")}${ch.map(e => btn(e.b, e.l, "→ dio origen a")).join("")}</div></div>`;
+}
+function papersOfEnt(ei, k = 8){ return P.filter(p => p.a.includes(ei)).sort((a, b) => b.c - a.c).slice(0, k); }
+function stageDist(ei){
+  const ps = P.filter(p => p.a.includes(ei)); if (!ps.length) return "";
+  const c = M.stages.map((_, i) => ps.filter(p => p.s === i).length); const mx = Math.max(...c);
+  const real = ps.filter(p => p.w === 1 || p.w === 2).length, known = ps.filter(p => p.w >= 0).length;
+  return `<div class="sec"><h3>Dónde se usa en robótica móvil</h3><p class="note">${fmt(ps.length)} papers lo nombran · ${pct(real / known)} valida en robot real · ${fmt(ps.filter(p => p.m).length)} multiagente</p>
+    <div class="bars">${M.stages.map((s, i) => `<div class="bar-row"><span>${esc(s)}</span><div class="track"><div class="fill" style="width:${mx ? c[i] / mx * 100 : 0}%"></div></div><span class="val">${fmt(c[i])}</span></div>`).join("")}</div></div>`;
+}
+function openCat(i){
+  const c = M.cat[i]; state.ctx = {type: "algoritmo", name: c.n, i};
+  const ei = c.e;
+  openDrawer(`<p class="eyebrow">${esc(c.lvl)} · ${esc(c.br)}</p><h2>${esc(c.n)}</h2>
+    <dl class="kv"><dt>Origen</dt><dd>${esc(c.o)}</dd><dt>Idea central</dt><dd>${esc(c.idea)}</dd>${c.uso ? `<dt>Uso en robots móviles</dt><dd>${esc(c.uso)}</dd>` : ""}<dt>Verificado contra</dt><dd>${esc(c.ver)}</dd>
+    ${ei >= 0 ? `<dt>Se cuenta como</dt><dd><span class="chip alg" data-alg="${ei}">${esc(ent(ei).n)}</span></dd>` : ""}</dl>
+    ${lineageFor(ei, c.n)}${ei >= 0 ? stageDist(ei) + papersBlock(ei) : `<p class="note sec">Este método no tiene un patrón propio en el diccionario, así que no se cuentan sus papers por separado.</p>`}
+    <div class="sec flex"><button class="btn pri" data-askctx="1">Preguntarle al tutor sobre ${esc(c.n)}</button></div>`);
+}
+function papersBlock(ei){
+  const ps = papersOfEnt(ei);
+  if (!ps.length) return `<p class="note sec">Ningún paper del corpus lo nombra en título, abstract o palabras clave.</p>`;
+  return `<div class="sec"><div class="flex sp"><h3>Papers más citados que lo usan</h3><button class="btn ghost" data-filteralg="${ei}">Ver los ${fmt(ent(ei).cnt)}</button></div><div class="list">${ps.map(paperRow).join("")}</div></div>`;
+}
+function openAlg(ei){
+  const ci = M.cat.findIndex(c => c.e === ei && c.n.toLowerCase() === ent(ei).n.toLowerCase());
+  const ci2 = ci >= 0 ? ci : M.cat.findIndex(c => c.e === ei);
+  if (ci2 >= 0) return openCat(ci2);
+  const e = ent(ei); state.ctx = {type: "algoritmo", name: e.n};
+  openDrawer(`<p class="eyebrow">${esc(M.secs[e.sec])}</p><h2>${esc(e.n)}</h2><dl class="kv"><dt>Familia</dt><dd>${esc(e.core || "Transversal")}</dd>${e.marl ? `<dt>Multiagente</dt><dd>${esc(e.marl)}</dd>` : ""}</dl>
+    ${lineageFor(ei, e.n)}${stageDist(ei)}${papersBlock(ei)}<div class="sec"><button class="btn pri" data-askctx="1">Preguntarle al tutor</button></div>`);
+}
+
+/* ---------------- papers ---------------- */
+function initPaperFilters(){
+  const opt = (v, l) => `<option value="${esc(v)}">${esc(l)}</option>`;
+  $("#f-stage").innerHTML = opt("", "Todas las etapas") + M.stages.map((s, i) => opt(i, s)).join("");
+  $("#f-fam").innerHTML = opt("", "Todas las familias") + M.fams.map((s, i) => opt(i, s)).join("") + opt("none", "Sin algoritmo concreto");
+  const used = M.ents.map((e, i) => [e, i]).filter(([e]) => e.cnt > 0).sort((a, b) => a[0].n.localeCompare(b[0].n));
+  $("#f-alg").innerHTML = opt("", "Cualquier algoritmo o técnica") + used.map(([e, i]) => opt(i, `${e.n} (${e.cnt})`)).join("");
+  $("#f-rob").innerHTML = opt("", "Cualquier robot") + M.robots.map((r, i) => opt(i, ROB[r])).join("");
+  $("#f-val").innerHTML = opt("", "Cualquier validación") + VAL.map((v, i) => opt(i, v)).join("") + opt("realany", "Real o sim2real");
+  $("#f-year").innerHTML = opt("", "Cualquier año") + [2015, 2018, 2020, 2022, 2023, 2024, 2025, 2026].map(y => opt(y, `Desde ${y}`)).join("");
+  $$("#pfilters input, #pfilters select").forEach(el => el.addEventListener(el.type === "search" ? "input" : "change", () => { state.shown = 50; renderPapers(); }));
+  $("#f-clear").addEventListener("click", () => { resetPF(); renderPapers(); });
+  $("#pmore").addEventListener("click", () => { state.shown += 50; renderPapers(); });
+}
+function resetPF(){ $$("#pfilters select").forEach(s => { if (s.id !== "f-sort") s.value = ""; }); $("#q").value = ""; $("#f-marl").checked = false; $("#f-ft").checked = false; state.shown = 50; }
+function filterPapers(){
+  const q = $("#q").value.trim().toLowerCase(), st = $("#f-stage").value, fa = $("#f-fam").value, al = $("#f-alg").value, rb = $("#f-rob").value, va = $("#f-val").value, yr = +$("#f-year").value || 0;
+  const terms = q ? q.split(/\s+/).filter(Boolean) : [];
+  let r = P.filter(p => (st === "" || p.s === +st) && (fa === "" || (fa === "none" ? !p.f.length : p.f.includes(+fa))) && (al === "" || p.a.includes(+al)) &&
+    (rb === "" || p.r === +rb) && (va === "" || (va === "realany" ? (p.w === 1 || p.w === 2) : p.w === +va)) && (!yr || (p.y || 0) >= yr) &&
+    (!$("#f-marl").checked || p.m) && (!$("#f-ft").checked || p.x >= 0));
+  if (terms.length) r = r.filter(p => { const hay = (p.t + " " + p.k.join(" ") + " " + (ABS ? (ABS[p.i] || "") : "")).toLowerCase(); return terms.every(t => hay.includes(t)); });
+  const s = $("#f-sort").value, now = 2026;
+  r.sort(s === "y" ? (a, b) => (b.y || 0) - (a.y || 0) || b.c - a.c : s === "r" ? (a, b) => b.c / Math.max(1, now - (b.y || now) + 1) - a.c / Math.max(1, now - (a.y || now) + 1) : (a, b) => b.c - a.c);
+  return r;
+}
+function renderPapers(){
+  if (!P.length) return;
+  const r = filterPapers();
+  $("#pcount").textContent = `${fmt(r.length)} papers${$("#q").value && !ABS ? " · buscando solo en títulos mientras cargan los abstracts" : ""}`;
+  $("#plist").innerHTML = r.slice(0, state.shown).map(paperRow).join("") || `<p class="muted">Ningún paper calza con esos filtros. Prueba quitando alguno.</p>`;
+  $("#pmore").hidden = r.length <= state.shown;
+}
+function related(p){
+  const main = p.a.find(i => ent(i).core) ?? p.a[0]; if (main == null) return [];
+  return P.filter(o => o.i !== p.i && o.a.includes(main) && o.s === p.s).sort((a, b) => b.c - a.c).slice(0, 6);
+}
+function openPaper(id){
+  const p = byId.get(id); if (!p) return; state.ctx = {type: "paper", id};
+  const f = p.x >= 0 ? FT[p.x] : null;
+  const ft = f ? `<div class="sec"><h3>Lo que dice el texto completo <span class="tag-llm">extraído por LLM · verificar</span></h3><dl class="kv">${[
+    ["Tarea", f["Tarea"]], ["Algoritmo", f["Algoritmo (texto)"]], ["Robot", f["Robot"]], ["Observaciones", f["Observaciones"]], ["Acciones", f["Acciones"]], ["Recompensa", f["Recompensa"]],
+    ["Simulador", f["Simulador"]], ["Entrenamiento", f["Entrenamiento"]], ["Semillas", f["Semillas (n)"] ?? "no lo dice"], ["Reporta varianza", f["Reporta varianza"] === true ? "Sí" : f["Reporta varianza"] === false ? "No" : "—"],
+    ["Métricas", f["Métricas"]], ["Líneas base", f["Líneas base"]], ["Valida en robot real", f["Validación en robot real"] === true ? "Sí" : f["Validación en robot real"] === false ? "No" : "—"], ["Sim2real", f["Sim2real"]],
+    ["Resultado", f["Resultado"]], ["Código", f["GitHub"] ? f["GitHub"].split("; ").map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>") : "Sin enlace en el texto"], ["Limitaciones", f["Limitaciones"]]
+  ].map(([k, v]) => `<dt>${k}</dt><dd>${k === "Código" ? v : esc(v ?? "—")}</dd>`).join("")}</dl></div>` : `<p class="note sec">Este paper no está en el grupo leído en texto completo.</p>`;
+  const rel = related(p);
+  openDrawer(`<p class="eyebrow">${p.s >= 0 ? esc(M.stages[p.s]) : "Sin etapa"} · ${esc(ROB[M.robots[p.r]])}${p.m ? " · multiagente" : ""}</p>
+    <h2>${esc(p.t)}</h2>
+    <p class="mono note">${p.y ?? ""} · ${fmt(p.c)} citas · ${esc(p.v)}${p.q ? " · " + esc(p.q) : ""}${p.d ? ` · <a href="https://doi.org/${esc(p.d)}" target="_blank" rel="noopener">doi.org/${esc(p.d)}</a>` : ""}</p>
+    <div class="chips" style="margin:8px 0 12px">${p.a.map(i => `<span class="chip alg" data-alg="${i}">${esc(ent(i).n)}</span>`).join("") || '<span class="chip">No nombra un algoritmo concreto</span>'}</div>
+    <div class="abs" id="absbox">${ABS ? esc(ABS[p.i] || "Sin abstract en las bases.") : "Cargando abstract…"}</div>
+    <div class="sec"><h3>Del abstract <span class="tag-llm">extraído por LLM · verificar</span></h3><dl class="kv"><dt>Plataforma</dt><dd>${esc(p.pl || "—")}</dd><dt>Simulador</dt><dd>${esc(p.sim || "—")}</dd><dt>Validación</dt><dd>${p.w >= 0 ? VAL[p.w] : "No queda claro"}</dd><dt>Resultados</dt><dd>${esc(p.res || "—")}</dd></dl></div>
+    ${ft}
+    ${rel.length ? `<div class="sec"><h3>Papers parecidos</h3><p class="note">Mismo algoritmo principal y misma etapa, los más citados.</p><div class="list">${rel.map(paperRow).join("")}</div></div>` : ""}
+    <div class="sec"><button class="btn pri" data-askctx="1">Preguntarle al tutor sobre este paper</button></div>`);
+  if (!ABS) { const t = setInterval(() => { if (ABS && $("#absbox")) { $("#absbox").textContent = ABS[p.i] || "Sin abstract en las bases."; clearInterval(t); } }, 400); setTimeout(() => clearInterval(t), 20000); }
+}
+
+/* ---------------- aplicaciones ---------------- */
+function renderAreas(){
+  $("#areas").innerHTML = APPS.areas.map(a => `<div class="card" data-area="${esc(a.n)}" tabindex="0" role="button"><div class="h"><h3>${esc(a.n)}</h3><span class="n">≈${fmt(a.est)}</span></div>
+    <p>Precisión ${pct(a.prec)} · multiagente ${pct(a.marl)} · valida en real ${pct((a.val["Real"] || 0) + (a.val["Sim + real"] || 0))}</p></div>`).join("");
+  renderArea(APPS.areas[0].n);
+}
+function renderArea(n){
+  const a = APPS.areas.find(x => x.n === n); state.ctx = {type: "area", name: n};
+  const algs = Object.entries(a.algs).sort((x, y) => y[1] - x[1]).slice(0, 10), mx = algs[0][1];
+  const ps = APPS.papers.filter(p => p.ar === n).sort((x, y) => (y.c || 0) - (x.c || 0));
+  const yrs = Object.entries(a.years).filter(([y]) => +y >= 2015).sort(); const ym = Math.max(...yrs.map(x => x[1]));
+  $("#area-detail").innerHTML = `<div class="flex sp"><h2>${esc(n)}</h2><button class="btn" data-askctx="1">Preguntarle al tutor sobre esta área</button></div>
+    <div class="grid g2" style="margin:10px 0 16px">
+      <div class="panel"><h3>Algoritmos más nombrados</h3><p class="note">% de los ${fmt(a.raw)} registros de OpenAlex</p><div class="bars">${algs.map(([k, v]) => `<div class="bar-row"><span>${esc(k)}</span><div class="track"><div class="fill" style="width:${v / mx * 100}%"></div></div><span class="val">${(v / a.raw * 100).toFixed(1)}%</span></div>`).join("")}</div></div>
+      <div class="panel"><h3>Registros por año</h3><p class="note">2026 va hasta octubre</p><div class="bars">${yrs.map(([y, v]) => `<div class="bar-row" style="grid-template-columns:48px minmax(0,1fr) 56px"><span class="mono">${y}</span><div class="track"><div class="fill" style="width:${v / ym * 100}%"></div></div><span class="val">${fmt(v)}</span></div>`).join("")}</div></div>
+    </div>
+    <h3>Reviews clave</h3><div class="list" style="margin-bottom:16px">${a.reviews.map(r => `<div class="row" style="cursor:default"><div class="t">${esc(r.titulo)}</div><div class="m"><span>${r.anio}</span><span>${fmt(r.citas)} citas</span><span>${esc(r.revista)}</span>${r.doi ? `<a href="https://doi.org/${esc(r.doi)}" target="_blank" rel="noopener">doi</a>` : ""}</div></div>`).join("")}</div>
+    <h3>Papers confirmados (${fmt(ps.length)}) <span class="tag-llm">extraído por LLM · verificar</span></h3>
+    <div class="list">${ps.slice(0, 60).map(p => `<div class="row" style="cursor:default"><div class="t">${esc(p.t)}</div><div class="m"><span>${p.y}</span><span>${fmt(p.c)} citas</span><span>${esc(p.sub || "")}</span>${p.d ? `<a href="https://doi.org/${esc(p.d)}" target="_blank" rel="noopener">doi</a>` : ""}</div>
+      <div style="font-size:13px"><b>Problema:</b> ${esc(p.pr || "—")}<br><b>Algoritmo:</b> ${esc(p.al || "—")} · <b>Validación:</b> ${esc(p.w)}${p.m ? " · multiagente" : ""}<br><b>Resultado:</b> ${esc(p.res || "—")}</div></div>`).join("")}</div>
+    ${ps.length > 60 ? `<p class="note">Se muestran los 60 más citados; el resto está en el Excel de aplicaciones.</p>` : ""}`;
+  $$("#areas .card").forEach(c => c.style.borderColor = c.dataset.area === n ? "var(--acc)" : "");
+}
+
+/* ---------------- surveys ---------------- */
+const THEMES = ["Sim-to-real gap","Sample efficiency / data","Safety & robustness","Generalization & transfer","Reward design","Real-world deployment & validation","Benchmarks & evaluation","Explainability & trust","Scalability & multi-agent coordination","Computational cost / real-time","Partial observability & perception","Integration with classical / LLMs"];
+function initSurveys(){
+  const areas = [...new Set(SV.map(s => s["Área"]))];
+  $("#s-area").innerHTML = `<option value="">Todas las áreas</option>` + areas.map(a => `<option>${esc(a)}</option>`).join("");
+  $("#s-theme").innerHTML = `<option value="">Cualquier reto</option>` + THEMES.map(t => `<option>${esc(t)}</option>`).join("");
+  ["#sq", "#s-area", "#s-theme"].forEach(s => $(s).addEventListener("input", renderSurveys));
+  renderSurveys();
+}
+function renderSurveys(){
+  const q = $("#sq").value.toLowerCase(), a = $("#s-area").value, th = $("#s-theme").value;
+  const r = SV.filter(s => (!a || s["Área"] === a) && (!th || s[th]) && (!q || JSON.stringify(s).toLowerCase().includes(q))).sort((x, y) => (y["Citas"] || 0) - (x["Citas"] || 0));
+  $("#scount").textContent = `${r.length} surveys`;
+  $("#slist").innerHTML = r.slice(0, 80).map(s => `<div class="panel"><p class="eyebrow">${esc(s["Área"])} · ${s["Año"] ?? ""} · ${fmt(s["Citas"])} citas${s["Sistemático"] ? " · sistemático" : ""}</p>
+    <h3>${esc(s["Título"])}</h3>${s["Alcance"] ? `<p style="margin:4px 0">${esc(s["Alcance"])}</p>` : ""}
+    ${s["Retos"] ? `<p style="margin:4px 0;font-size:13px"><b>Retos:</b> ${esc(s["Retos"])}</p>` : ""}${s["Direcciones futuras"] ? `<p style="margin:4px 0;font-size:13px"><b>Direcciones:</b> ${esc(s["Direcciones futuras"])}</p>` : ""}
+    ${s["DOI"] ? `<a class="mono note" href="https://doi.org/${esc(s["DOI"])}" target="_blank" rel="noopener">doi.org/${esc(s["DOI"])}</a>` : ""}</div>`).join("");
+}
+
+/* ---------------- guía ---------------- */
+const QS = [
+  ["agentes", "¿Cuántos agentes aprenden?", [["uno","Uno"],["coop","Varios que cooperan"],["comp","Varios que compiten"]]],
+  ["acciones", "¿Cómo son las acciones?", [["disc","Discretas (pocas opciones)"],["cont","Continuas (velocidades, torques)"],["hib","Mixtas"]]],
+  ["sim", "¿Con qué entrenas?", [["gpu","Simulador rápido y paralelo (Isaac, MuJoCo en GPU)"],["lento","Simulador lento (Gazebo, Webots)"],["real","Directo en el robot real"]]],
+  ["datos", "¿Tienes datos previos?", [["nada","Nada"],["demos","Demostraciones de un experto"],["dataset","Un dataset grande ya grabado"]]],
+  ["horizonte", "¿Cómo es la recompensa?", [["densa","Frecuente y clara"],["escasa","Escasa o la tarea es larga"]]],
+  ["obs", "¿El agente ve todo lo que necesita?", [["full","Sí, estado completo"],["parcial","No: sensores ruidosos u oclusiones"]]],
+  ["seg", "¿La seguridad es crítica?", [["no","No mucho"],["si","Sí: no puede chocar ni romper restricciones"]]],
+  ["etapa", "¿En qué parte del robot va?", [["plan","Planificación / navegación"],["ctrl","Control"],["loco","Locomoción"],["perc","Percepción activa / SLAM activo"],["e2e","Extremo a extremo"]]]];
+const DEF = {agentes:"uno",acciones:"cont",sim:"lento",datos:"nada",horizonte:"densa",obs:"full",seg:"no",etapa:"plan"};
+function initGuide(){
+  $("#wiz").innerHTML = QS.map(([k, q, os]) => `<fieldset class="q" style="border:0;padding:0;margin:0 0 14px"><legend class="ql">${q}</legend><div class="opts">${os.map(([v, l]) => `<label><input type="radio" name="${k}" value="${v}" ${DEF[k] === v ? "checked" : ""}><span>${l}</span></label>`).join("")}</div></fieldset>`).join("");
+  $("#wiz").addEventListener("change", renderReco); renderReco();
+}
+function recommend(a){
+  const r = {main: "", fam: "", why: [], alt: [], add: [], ents: []};
+  const E = n => { const i = entByName(n); if (i >= 0) r.ents.push(i); };
+  if (a.agentes !== "uno"){
+    if (a.agentes === "comp"){ r.main = "Self-play con PPO o MADDPG"; r.fam = "Multiagente · teoría de juegos"; r.why.push("Con oponentes que también aprenden, el entorno no es estacionario: el self-play y las ligas de oponentes (NFSP, PSRO) estabilizan el entrenamiento.");
+      r.alt.push("MADDPG con críticos centralizados", "PSRO si el juego es de suma cero"); E("NFSP / PSRO / self-play"); E("MADDPG"); E("PPO"); }
+    else if (a.acciones === "disc"){ r.main = "QMIX (o MAPPO)"; r.fam = "Multiagente · descomposición del valor / CTDE"; r.why.push("Con acciones discretas y recompensa de equipo, QMIX reparte el valor conjunto entre agentes; MAPPO es una alternativa simple y muy robusta.");
+      r.alt.push("MAPPO con parámetros compartidos", "VDN si buscas lo más simple"); E("QMIX"); E("MAPPO"); E("VDN"); }
+    else { r.main = "MAPPO"; r.fam = "Multiagente · actor-crítico CTDE"; r.why.push("MAPPO (PPO con crítico centralizado) es la referencia más estable en tareas cooperativas continuas y escala bien con parámetros compartidos.");
+      r.alt.push(a.sim === "gpu" ? "IPPO si los agentes son casi independientes" : "MADDPG / MATD3 / MASAC si cada muestra cuesta caro (off-policy)"); E("MAPPO"); E("MADDPG"); E("MATD3"); }
+    if (a.obs === "parcial") r.add.push("Comunicación aprendida (TarMAC, DIAL) o políticas recurrentes por agente");
+    r.add.push("Parámetros compartidos entre robots iguales, con el id del agente en la observación");
+  } else if (a.datos === "dataset"){
+    r.main = "IQL o CQL (RL offline)"; r.fam = "RL offline"; r.why.push("Con un dataset grande y sin poder explorar libremente, los métodos offline aprenden sin salirse de lo que los datos cubren.");
+    r.alt.push("TD3+BC como línea base simple", "Afinar después online (offline-to-online)"); E("Offline RL (genérico)"); E("CQL"); E("IQL (implícito)");
+  } else if (a.datos === "demos"){
+    r.main = a.acciones === "disc" ? "DQfD (DQN con demostraciones)" : "SAC con demostraciones en el buffer (o DAPG)"; r.fam = "Imitación + RL";
+    r.why.push("Las demostraciones resuelven la exploración inicial; después el RL mejora más allá del experto.");
+    r.alt.push("Behavior cloning + DAgger si basta con imitar", "GAIL / AIRL si quieres inferir la recompensa", "AMP para movimiento natural en robots con patas"); E("Behavior cloning"); E("GAIL"); E("Inverse RL"); E("DAgger");
+  } else if (a.sim === "gpu"){
+    r.main = "PPO"; r.fam = "Gradiente de política on-policy"; r.why.push("Con miles de entornos en paralelo, PPO aprovecha la cantidad de muestras y es estable con poco ajuste. Es el estándar en locomoción aprendida.");
+    r.alt.push(a.acciones === "disc" ? "Rainbow / D3QN si las acciones son pocas" : "SAC si después vas a afinar en el robot real"); E("PPO"); E(a.acciones === "disc" ? "D3QN" : "SAC");
+  } else if (a.sim === "real"){
+    r.main = a.acciones === "disc" ? "D3QN con PER" : "SAC (o DroQ / CrossQ)"; r.fam = a.acciones === "disc" ? "Basado en valor" : "Actor-crítico off-policy";
+    r.why.push("En el robot real cada muestra cuesta: los métodos off-policy reutilizan la experiencia muchas veces.");
+    r.alt.push("Basado en modelo (Dreamer, MBPO, TD-MPC) si necesitas aún menos datos"); E(a.acciones === "disc" ? "D3QN" : "SAC"); E("Dreamer"); E("MBPO"); E("Model-based RL (genérico)");
+  } else {
+    if (a.acciones === "disc"){ r.main = "D3QN (Double + Dueling DQN) con PER"; r.fam = "Basado en valor"; r.why.push("Con pocas acciones discretas (avanzar, girar) la familia DQN es directa y eficiente; Double y Dueling corrigen la sobreestimación.");
+      r.alt.push(a.etapa === "plan" ? "Q-learning tabular si el mapa es una grilla chica" : "PPO si quieres algo más estable de ajustar", "Rainbow si necesitas el máximo rendimiento"); E("D3QN"); E("Double DQN"); E("DQN"); E("Q-learning"); }
+    else { r.main = a.etapa === "ctrl" ? "TD3 o SAC (residual sobre tu controlador)" : "SAC"; r.fam = "Actor-crítico off-policy"; r.why.push("Con acciones continuas y simulador lento, SAC y TD3 reutilizan experiencia y exploran bien; SAC suele ser más robusto a los hiperparámetros.");
+      r.alt.push("TD3 si SAC oscila", "DDPG solo como línea base histórica", "PPO si puedes paralelizar el simulador"); E("SAC"); E("TD3"); E("DDPG"); }
+  }
+  if (a.acciones === "hib") r.add.push("Acciones mixtas: P-DQN / PA-DDPG, o separar la parte discreta en un nivel superior");
+  if (a.horizonte === "escasa") r.add.push("Recompensa escasa: HER si hay metas, RL jerárquico (opciones, HIRO) para tareas largas, curiosidad (ICM, RND) o currículo");
+  if (a.obs === "parcial" && a.agentes === "uno") r.add.push("Observación parcial: política recurrente (LSTM / GRU) o apilar observaciones; crítico asimétrico si en simulación ves el estado completo");
+  if (a.seg === "si") r.add.push("Seguridad: PPO-Lagrangiano o CPO para restricciones, o un escudo con CBF encima de la política");
+  if (a.sim !== "real") r.add.push("Para pasar al robot real: aleatorización del dominio, profesor-alumno o RMA");
+  if (a.etapa === "ctrl") r.add.push("En control conviene que el RL aprenda ganancias o una corrección residual sobre PID / MPC en vez de reemplazarlos");
+  if (a.etapa === "perc") r.add.push("En percepción activa el RL elige hacia dónde mirar o moverse; la detección en sí suele ser supervisada");
+  if (a.etapa === "loco") r.add.push("En locomoción: PPO en simulación masiva + sim2real es la receta dominante del corpus");
+  return r;
+}
+const STAGE_OF = {plan:2, ctrl:4, loco:3, perc:0, e2e:5};
+function renderReco(){
+  const a = Object.fromEntries(QS.map(([k]) => [k, ($(`#wiz input[name=${k}]:checked`) || {}).value || DEF[k]]));
+  const r = recommend(a); state.ctx = {type: "guia", answers: a, reco: r.main};
+  const st = STAGE_OF[a.etapa];
+  let ex = P.filter(p => p.a.some(i => r.ents.includes(i)) && p.s === st && (a.agentes === "uno" ? !p.m : p.m));
+  if (ex.length < 3) ex = P.filter(p => p.a.some(i => r.ents.includes(i)));
+  ex.sort((x, y) => ((y.w === 1 || y.w === 2) - (x.w === 1 || x.w === 2)) || y.c - x.c);
+  const n = new Set(P.filter(p => p.a.some(i => r.ents.includes(i))).map(p => p.i)).size;
+  $("#reco").innerHTML = `<p class="eyebrow">Recomendación</p><div class="main">${esc(r.main)}</div><p class="note">${esc(r.fam)} · ${fmt(n)} papers del corpus usan alguno de estos algoritmos</p>
+    <h3 style="margin-top:12px">Por qué</h3><p style="margin:0">${r.why.map(esc).join(" ")}</p>
+    ${r.alt.length ? `<h3 style="margin-top:12px">Alternativas</h3><ul>${r.alt.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    ${r.add.length ? `<h3 style="margin-top:12px">Agrégale</h3><ul>${r.add.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    <div class="chips" style="margin:8px 0">${[...new Set(r.ents)].map(i => `<span class="chip alg" data-alg="${i}">${esc(ent(i).n)} · ${fmt(ent(i).cnt)}</span>`).join("")}</div>
+    <h3 style="margin-top:12px">Papers del corpus con esta combinación</h3><div class="list">${ex.slice(0, 4).map(paperRow).join("") || '<p class="muted">No hay ejemplos directos.</p>'}</div>
+    <div class="sec"><button class="btn pri" data-askctx="1">Pedirle al tutor que lo explique para mi caso</button></div>`;
+}
+
+/* ---------------- tutor ---------------- */
+const RULES = `Eres un tutor experto en aprendizaje por refuerzo (RL) y en su uso en robótica móvil. Ayudas a una estudiante de doctorado que está escribiendo un review sistemático y quiere volverse experta. Responde en español, claro y directo, como un buen profesor: explica la intuición, luego lo técnico, y usa ejemplos de robots.
+Tienes herramientas para consultar los datos de la página: ${"{n}"} papers de RL en robótica móvil (clasificados por etapa, robot, validación y algoritmos con un diccionario fijo), ${"{nft}"} papers leídos en texto completo (semillas, métricas, líneas base, recompensa…), un mapa de ${"{nc}"} métodos de RL con su origen, idea y genealogía, 9 áreas de aplicación y ${"{nsv}"} surveys.
+Úsalas cuando la pregunta sea sobre el corpus o pida ejemplos, y cita los papers por título y año. Los campos marcados como extraídos por LLM pueden tener errores: dilo cuando los uses. Si algo no está en los datos, dilo y responde con tu conocimiento general aclarando que no viene del corpus. Si te piden un quiz, haz preguntas de a una y corrige la respuesta. Usa texto plano con listas simples; sin tablas.`;
+let turns = [], ctl = null, sampleFn = null, canTools = false;
+function ctxText(){
+  const c = state.ctx; if (!c) return "";
+  if (c.type === "paper"){ const p = byId.get(c.id); return `Paper abierto: "${p.t}" (${p.y}).`; }
+  if (c.type === "algoritmo") return `Algoritmo abierto: ${c.name}.`;
+  if (c.type === "area") return `Área abierta: ${c.name}.`;
+  if (c.type === "leccion") return `Lección abierta: ${c.name}.`;
+  if (c.type === "guia") return `Guía: respuestas ${JSON.stringify(c.answers)}; recomendación de la página: ${c.reco}.`;
+  return "";
+}
+function renderCtx(){
+  const t = ctxText();
+  $("#ctx").innerHTML = t ? `<span class="chip ft">Contexto</span><span>${esc(t)}</span><button class="btn ghost" id="ctxclear">Quitar</button>` : `<span class="muted">Sin contexto: abre un paper, un algoritmo o la guía y el tutor sabrá de qué hablas.</span>`;
+  const b = $("#ctxclear"); if (b) b.onclick = () => { state.ctx = null; renderCtx(); };
+}
+const STARTERS = ["Explícame la diferencia entre basado en valor, gradiente de política y actor-crítico", "¿Por qué PPO domina en locomoción y SAC en control?", "¿Qué papers de multiagente validan en robot real?", "Hazme un quiz de 5 preguntas sobre la familia DQN", "¿Qué tan bien se reporta la evaluación en el corpus?"];
+function paperBrief(p){ return {id: p.i, titulo: p.t, anio: p.y, citas: p.c, etapa: p.s >= 0 ? M.stages[p.s] : null, robot: ROB[M.robots[p.r]], multiagente: !!p.m, validacion: p.w >= 0 ? VAL[p.w] : "no queda claro", algoritmos: p.a.map(i => ent(i).n).slice(0, 6), texto_completo: p.x >= 0}; }
+const TOOLS = [
+  {name: "buscar_papers", description: "Busca papers del corpus de robótica móvil. Devuelve hasta 'limite' papers (id, título, año, citas, etapa, robot, validación, algoritmos). Filtros opcionales.",
+   inputSchema: {type: "object", properties: {texto: {type: "string", description: "palabras a buscar en título, keywords y abstract (en inglés)"}, algoritmo: {type: "string", description: "nombre exacto o parcial de un algoritmo, p.ej. PPO, SAC, QMIX"}, etapa: {type: "string", enum: M_STAGES()}, multiagente: {type: "boolean"}, solo_robot_real: {type: "boolean"}, solo_texto_completo: {type: "boolean"}, desde_anio: {type: "integer"}, limite: {type: "integer"}}},
+   execute(i){ let r = P;
+     if (i.algoritmo){ const q = String(i.algoritmo).toLowerCase(); const ids = M.ents.map((e, k) => [e, k]).filter(([e]) => e.n.toLowerCase() === q || e.n.toLowerCase().includes(q)).map(([, k]) => k); r = r.filter(p => p.a.some(a => ids.includes(a))); }
+     if (i.etapa){ const s = M.stages.indexOf(String(i.etapa)); if (s >= 0) r = r.filter(p => p.s === s); }
+     if (i.multiagente != null) r = r.filter(p => !!p.m === !!i.multiagente);
+     if (i.solo_robot_real) r = r.filter(p => p.w === 1 || p.w === 2);
+     if (i.solo_texto_completo) r = r.filter(p => p.x >= 0);
+     if (i.desde_anio) r = r.filter(p => (p.y || 0) >= +i.desde_anio);
+     if (i.texto){ const ts = String(i.texto).toLowerCase().split(/\s+/).filter(Boolean); r = r.filter(p => { const h = (p.t + " " + p.k.join(" ") + " " + (ABS ? ABS[p.i] || "" : "")).toLowerCase(); return ts.every(t => h.includes(t)); }); }
+     const total = r.length; r = [...r].sort((a, b) => b.c - a.c).slice(0, Math.min(+i.limite || 8, 15));
+     return {total_que_calzan: total, papers: r.map(paperBrief)}; }},
+  {name: "ver_paper", description: "Devuelve el abstract y, si existe, lo extraído del texto completo (recompensa, semillas, métricas, líneas base, resultado…) de un paper por su id.",
+   inputSchema: {type: "object", properties: {id: {type: "string"}}, required: ["id"]},
+   execute(i){ const p = byId.get(String(i.id)); if (!p) throw new Error("No existe ese id"); const f = p.x >= 0 ? FT[p.x] : null;
+     return {...paperBrief(p), abstract: ABS ? (ABS[p.i] || "").slice(0, 2500) : "(cargando)", del_abstract_llm: {plataforma: p.pl, simulador: p.sim, resultados: p.res},
+       texto_completo_llm: f ? Object.fromEntries(Object.entries(f).filter(([k, v]) => v != null && !["ID", "DOI", "Grupo"].includes(k)).map(([k, v]) => [k, String(v).slice(0, 400)])) : null}; }},
+  {name: "ver_algoritmo", description: "Información de un método del mapa de RL: rama, origen, idea, uso en robots, genealogía (de qué viene y qué derivó) y cuántos papers del corpus lo nombran, con los 5 más citados.",
+   inputSchema: {type: "object", properties: {nombre: {type: "string"}}, required: ["nombre"]},
+   execute(i){ const q = String(i.nombre).toLowerCase(); const c = M.cat.find(c => c.n.toLowerCase() === q) || M.cat.find(c => c.n.toLowerCase().includes(q));
+     const ei = c ? c.e : M.ents.findIndex(e => e.n.toLowerCase().includes(q)); if (!c && ei < 0) throw new Error("No está en el mapa");
+     const ids = Object.entries(M.lin.nodes).filter(([, v]) => (ei >= 0 && v.e === ei) || (c && v.n.toLowerCase() === c.n.toLowerCase())).map(([k]) => k);
+     return {metodo: c ? {nombre: c.n, rama: c.br, origen: c.o, idea: c.idea, uso_robotica: c.uso} : {nombre: ent(ei).n},
+       viene_de: M.lin.edges.filter(e => ids.includes(e.b)).map(e => ({de: M.lin.nodes[e.a].n, que_cambio: e.l})), dio_origen_a: M.lin.edges.filter(e => ids.includes(e.a)).map(e => ({a: M.lin.nodes[e.b].n, que_cambio: e.l})),
+       papers_en_corpus: ei >= 0 ? ent(ei).cnt : null, top_papers: ei >= 0 ? papersOfEnt(ei, 5).map(paperBrief) : []}; }},
+  {name: "estadisticas", description: "Conteos del corpus por una dimensión: 'etapa', 'familia', 'robot', 'validacion', 'anio', o 'evaluacion' (prácticas de reporte en los papers de texto completo).",
+   inputSchema: {type: "object", properties: {dimension: {type: "string", enum: ["etapa", "familia", "robot", "validacion", "anio", "evaluacion"]}}, required: ["dimension"]},
+   execute(i){ const d = String(i.dimension), c = {};
+     if (d === "evaluacion"){ const n = FT.length, f = k => FT.filter(k).length; return {n_papers_texto_completo: n, reporta_semillas: f(x => x["Semillas (n)"] != null), reporta_varianza: f(x => x["Reporta varianza"] === true), linea_base_clasica: f(x => x["Línea base clásica"] === true), linea_base_rl: f(x => x["Línea base RL"] === true), valida_robot_real: f(x => x["Validación en robot real"] === true), enlace_a_codigo: f(x => !!x["GitHub"]), nota: "extraído por LLM del texto completo"}; }
+     P.forEach(p => { const ks = d === "etapa" ? [p.s >= 0 ? M.stages[p.s] : "sin etapa"] : d === "familia" ? (p.f.length ? p.f.map(f => M.fams[f]) : ["sin algoritmo concreto"]) : d === "robot" ? [ROB[M.robots[p.r]]] : d === "validacion" ? [p.w >= 0 ? VAL[p.w] : "no queda claro"] : [String(p.y)];
+       ks.forEach(k => c[k] = (c[k] || 0) + 1); }); return {total: P.length, conteos: c}; }},
+  {name: "ver_surveys", description: "Busca surveys (reviews) por texto y devuelve hasta 6 con alcance, retos y direcciones futuras.",
+   inputSchema: {type: "object", properties: {texto: {type: "string"}, area: {type: "string"}}},
+   execute(i){ const q = String(i.texto || "").toLowerCase(); return SV.filter(s => (!i.area || String(s["Área"]).includes(i.area)) && (!q || JSON.stringify(s).toLowerCase().includes(q))).sort((a, b) => (b["Citas"] || 0) - (a["Citas"] || 0)).slice(0, 6)
+     .map(s => ({titulo: s["Título"], anio: s["Año"], area: s["Área"], alcance: s["Alcance"], retos: String(s["Retos"] || "").slice(0, 400), direcciones: String(s["Direcciones futuras"] || "").slice(0, 400)})); }},
+  {name: "ver_area", description: "Resumen de un área de aplicación (medicina, rescate, energía, transporte, agricultura, manufactura, comunicaciones, infraestructura, robótica móvil): tamaño estimado, precisión, algoritmos, validación y 5 papers ejemplo.",
+   inputSchema: {type: "object", properties: {area: {type: "string"}}, required: ["area"]},
+   execute(i){ const q = String(i.area).toLowerCase(); const a = APPS.areas.find(x => x.n.toLowerCase().includes(q)); if (!a) throw new Error("Áreas: " + APPS.areas.map(x => x.n).join(", "));
+     return {area: a.n, papers_estimados: a.est, precision: a.prec, multiagente: a.marl, validacion: a.val, algoritmos: a.algs, ejemplos: APPS.papers.filter(p => p.ar === a.n).sort((x, y) => (y.c || 0) - (x.c || 0)).slice(0, 5).map(p => ({titulo: p.t, anio: p.y, problema: p.pr, algoritmo: p.al, resultado: p.res}))}; }}
+];
+function M_STAGES(){ return ["Percepción","Localización","Planificación","Movimiento / locomoción","Control","Integración"]; }
+function rulesText(){ return RULES.replace("{n}", fmt(M.n)).replace("{nft}", M.n_ft).replace("{nc}", M.cat.length).replace("{nsv}", M.n_sv); }
+function addMsg(role, text){ const d = document.createElement("div"); d.className = "msg " + (role === "user" ? "u" : "a"); d.textContent = text; $("#chat").append(d); $("#chat").scrollTop = 1e9; return d; }
+async function initTutor(){
+  $("#starters").innerHTML = STARTERS.map(s => `<button class="btn ghost" data-starter="${esc(s)}">${esc(s)}</button>`).join("");
+  $("#starters").addEventListener("click", e => { const b = e.target.closest("[data-starter]"); if (b){ $("#ask").value = b.dataset.starter; send(); } });
+  $("#send").addEventListener("click", send);
+  $("#ask").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); } });
+  $("#stop").addEventListener("click", () => ctl?.abort());
+  renderCtx();
+  try { sampleFn = window.claude ? await window.claude.use("sample") : null; } catch { sampleFn = null; }
+  if (!sampleFn){ $("#tutor-note").textContent = "El tutor necesita abrir esta página dentro de Claude. Aquí no está disponible."; $("#send").disabled = true; return; }
+  try { const lim = await sampleFn.limits(); canTools = !!lim.tools; } catch { canTools = false; }
+}
+async function send(){
+  const q = $("#ask").value.trim(); if (!q || !sampleFn) return;
+  $("#ask").value = ""; addMsg("user", q);
+  const ctxt = ctxText();
+  let userTurn = (ctxt ? `[${ctxt}]\n` : "") + q;
+  if (!canTools){
+    const ts = q.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+    const hits = P.filter(p => ts.some(t => p.t.toLowerCase().includes(t))).sort((a, b) => b.c - a.c).slice(0, 12).map(paperBrief);
+    userTurn += `\n\n(Datos de la página que pueden servir: ${JSON.stringify(hits)})`;
+  }
+  turns.push({role: "user", content: userTurn}); if (turns.length > 12) turns = turns.slice(-12);
+  const bubble = addMsg("assistant", "Pensando…"); const used = [];
+  ctl = new AbortController(); $("#send").disabled = true; $("#stop").hidden = false;
+  const wrapped = TOOLS.map(t => ({...t, execute: (i, c) => { used.push(t.name); const tl = bubble.querySelector(".tools") || bubble.appendChild(Object.assign(document.createElement("div"), {className: "tools"})); tl.textContent = "Consultó: " + [...new Set(used)].join(", "); return t.execute(i, c); }}));
+  try {
+    const opts = {signal: ctl.signal, onText: ({text}) => { bubble.firstChild && bubble.firstChild.nodeType === 3 ? bubble.firstChild.nodeValue = text : bubble.prepend(document.createTextNode(text)); if (bubble.firstChild.nodeValue === "Pensando…") {} $("#chat").scrollTop = 1e9; }};
+    bubble.textContent = "Pensando…";
+    if (canTools) opts.tools = wrapped; else opts.cache = false;
+    const {text, truncated} = await sampleFn([{role: "user", content: rulesText()}, ...turns], opts);
+    bubble.firstChild.nodeValue = text + (truncated ? "\n\n(La respuesta quedó cortada. Pide que siga.)" : "");
+    turns.push({role: "assistant", content: text});
+  } catch (e){
+    const msg = {not_granted: "No diste permiso para usar Claude desde esta página. Puedes activarlo en los permisos del artifact.", rate_limited: "Hay demasiadas preguntas seguidas o llegaste a tu límite de uso. Prueba en un rato.", cancelled: "", refused: "Claude no respondió esa pregunta. Prueba formulándola distinto.", sampling_disabled: "Claude no está disponible para tu cuenta.", session_expired: "Tu sesión expiró. Vuelve a iniciar sesión."}[e?.code];
+    bubble.firstChild.nodeValue = (e?.text || "") + (msg === undefined ? "\n\nSe cortó la conexión. Vuelve a preguntar." : msg ? "\n\n" + msg : "");
+    turns.pop();
+  } finally { $("#send").disabled = false; $("#stop").hidden = true; }
+}
+
+/* ================= APRENDE: lecciones interactivas ================= */
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let stopDemo = () => {};
+function canvasCtx(cv, w, h){ const d = Math.min(2, window.devicePixelRatio || 1); cv.width = w * d; cv.height = h * d; cv.style.aspectRatio = `${w}/${h}`; const c = cv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0); return c; }
+function rgba(hex, a){ hex = hex.replace("#", ""); if (hex.length === 3) hex = hex.split("").map(x => x + x).join(""); const n = parseInt(hex, 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+function loop(fn){ let id, alive = true; const f = () => { if (!alive) return; if (fn() !== false) id = requestAnimationFrame(f); }; id = requestAnimationFrame(f); return () => { alive = false; cancelAnimationFrame(id); }; }
+function lineChart(cv, series, o = {}){
+  const W = 520, H = 170, c = canvasCtx(cv, W, H), L = 40, R = 10, T = 10, B = 24;
+  c.clearRect(0, 0, W, H); const all = series.flatMap(s => s.data); if (!all.length) return;
+  const ymin = o.ymin ?? Math.min(...all), ymax = o.ymax ?? Math.max(...all, ymin + 1e-6), n = Math.max(...series.map(s => s.data.length));
+  const X = i => L + (W - L - R) * (n <= 1 ? 0 : i / (n - 1)), Y = v => T + (H - T - B) * (1 - (v - ymin) / (ymax - ymin || 1));
+  c.strokeStyle = cssv("--line"); c.lineWidth = 1; c.fillStyle = cssv("--mut"); c.font = "11px " + cssv("--f-mono");
+  [ymin, (ymin + ymax) / 2, ymax].forEach(v => { c.beginPath(); c.moveTo(L, Y(v)); c.lineTo(W - R, Y(v)); c.stroke(); c.fillText(Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1), 2, Y(v) + 4); });
+  c.fillText(o.xlabel || "", L, H - 6);
+  series.forEach(s => { c.strokeStyle = s.color; c.lineWidth = 2; c.beginPath(); s.data.forEach((v, i) => i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v))); c.stroke(); });
+}
+/* ---- gridworld ---- */
+const GW = {W: 7, H: 5, walls: new Set(["3,1", "3,2", "3,3"]), goal: "6,0", pit: "6,1", start: [0, 4]};
+const ACT = [[0, -1], [1, 0], [0, 1], [-1, 0]], NS = GW.W * GW.H;
+const sid = (x, y) => y * GW.W + x, sxy = s => [s % GW.W, Math.floor(s / GW.W)];
+const isWall = s => GW.walls.has(sxy(s).join(",")), isGoal = s => sxy(s).join(",") === GW.goal, isPit = s => sxy(s).join(",") === GW.pit, isTerm = s => isGoal(s) || isPit(s);
+function move(s, a){ const [x, y] = sxy(s), nx = x + ACT[a][0], ny = y + ACT[a][1]; if (nx < 0 || ny < 0 || nx >= GW.W || ny >= GW.H || GW.walls.has(nx + "," + ny)) return s; return sid(nx, ny); }
+function rew(s2){ return isGoal(s2) ? 1 : isPit(s2) ? -1 : -0.04; }
+function envStep(s, a, slip){ if (slip && Math.random() < slip) a = Math.floor(Math.random() * 4); const s2 = move(s, a); return [s2, rew(s2), isTerm(s2)]; }
+function drawGrid(c, W, H, val, pol, agent, opt = {}){
+  const cs = Math.min(W / GW.W, H / GW.H), ox = (W - cs * GW.W) / 2, oy = (H - cs * GW.H) / 2;
+  const acc = cssv("--acc"), bad = cssv("--bad"), ink = cssv("--ink"), line = cssv("--line"), panel = cssv("--panel"), mut = cssv("--mut");
+  c.clearRect(0, 0, W, H); c.font = `${Math.max(9, cs * .2)}px ${cssv("--f-mono")}`; c.textAlign = "center"; c.textBaseline = "middle";
+  const vmax = Math.max(1e-6, ...(val || [0]).map(Math.abs));
+  for (let s = 0; s < NS; s++){
+    const [x, y] = sxy(s), px = ox + x * cs, py = oy + y * cs;
+    c.fillStyle = panel; c.fillRect(px + 1, py + 1, cs - 2, cs - 2);
+    if (isWall(s)){ c.fillStyle = ink; c.globalAlpha = .75; c.fillRect(px + 1, py + 1, cs - 2, cs - 2); c.globalAlpha = 1; continue; }
+    if (isGoal(s) || isPit(s)){ c.fillStyle = isGoal(s) ? rgba(acc, .85) : rgba(bad, .85); c.fillRect(px + 1, py + 1, cs - 2, cs - 2); c.fillStyle = "#fff"; c.fillText(isGoal(s) ? "+1 meta" : "−1", px + cs / 2, py + cs / 2); continue; }
+    if (val){ const v = val[s]; c.fillStyle = v >= 0 ? rgba(acc, Math.min(.75, Math.abs(v) / vmax * .75)) : rgba(bad, Math.min(.75, Math.abs(v) / vmax * .75)); c.fillRect(px + 1, py + 1, cs - 2, cs - 2);
+      if (opt.nums !== false){ c.fillStyle = ink; c.fillText(v.toFixed(2), px + cs / 2, py + cs * .78); } }
+    if (pol && pol[s] >= 0){ const [dx, dy] = ACT[pol[s]], cx = px + cs / 2, cy = py + cs * .42, L = cs * .2;
+      c.strokeStyle = ink; c.lineWidth = 2; c.beginPath(); c.moveTo(cx - dx * L, cy - dy * L); c.lineTo(cx + dx * L, cy + dy * L); c.stroke();
+      c.beginPath(); c.moveTo(cx + dx * L, cy + dy * L); c.lineTo(cx + dx * L * .35 - dy * L * .45, cy + dy * L * .35 + dx * L * .45); c.lineTo(cx + dx * L * .35 + dy * L * .45, cy + dy * L * .35 - dx * L * .45); c.closePath(); c.fillStyle = ink; c.fill(); }
+    if (sid(...GW.start) === s){ c.fillStyle = mut; c.fillText("inicio", px + cs / 2, py + cs * .14 + 6); }
+  }
+  c.strokeStyle = line; c.lineWidth = 1; c.strokeRect(ox + .5, oy + .5, cs * GW.W - 1, cs * GW.H - 1);
+  if (agent != null){ const [x, y] = sxy(agent); c.beginPath(); c.arc(ox + x * cs + cs / 2, oy + y * cs + cs / 2, cs * .2, 0, 7); c.fillStyle = cssv("--warm"); c.fill(); c.strokeStyle = "#fff"; c.lineWidth = 2; c.stroke(); }
+}
+class QAgent { constructor(){ this.Q = new Float64Array(NS * 4); this.model = new Map(); }
+  act(s, eps){ if (Math.random() < eps) return Math.floor(Math.random() * 4); const q = this.Q.slice(s * 4, s * 4 + 4); const m = Math.max(...q); const b = [0, 1, 2, 3].filter(a => q[a] === m); return b[Math.floor(Math.random() * b.length)]; }
+  upd(s, a, r, s2, done, al, g){ const t = done ? r : r + g * Math.max(...this.Q.slice(s2 * 4, s2 * 4 + 4)); this.Q[s * 4 + a] += al * (t - this.Q[s * 4 + a]); }
+  V(){ return [...Array(NS)].map((_, s) => isWall(s) || isTerm(s) ? 0 : Math.max(...this.Q.slice(s * 4, s * 4 + 4))); }
+  P(){ return [...Array(NS)].map((_, s) => { if (isWall(s) || isTerm(s)) return -1; const q = this.Q.slice(s * 4, s * 4 + 4); return q.every(v => v === 0) ? -1 : q.indexOf(Math.max(...q)); }); } }
+
+/* ---- demos ---- */
+const DEMOS = {};
+DEMOS.loop = el => stepper(el, {w: 640, h: 250,
+  nodes: [{id: "ag", x: 40, y: 85, w: 170, h: 80, t: "Agente", sub: "política π(a|s)"}, {id: "en", x: 430, y: 85, w: 170, h: 80, t: "Entorno", sub: "el mundo / el robot"}],
+  edges: [{id: "a", d: "M210,105 C300,20 340,20 430,105", lx: 320, ly: 40, label: "acción aₜ"}, {id: "s", d: "M430,145 C340,230 300,230 210,145", lx: 320, ly: 222, label: "estado sₜ₊₁"}, {id: "r", d: "M430,160 C330,250 310,250 210,160", lx: 320, ly: 246, label: "recompensa rₜ₊₁"}],
+  steps: [{n: ["ag"], e: [], text: "El agente mira el estado sₜ (lo que ve con sus sensores) y su política π decide qué hacer."},
+    {n: ["ag", "en"], e: ["a"], text: "Envía la acción aₜ al entorno: por ejemplo, la velocidad de cada rueda o el torque de cada articulación."},
+    {n: ["en"], e: ["s"], text: "El entorno cambia y devuelve el nuevo estado sₜ₊₁."},
+    {n: ["en", "ag"], e: ["r"], text: "También devuelve una recompensa rₜ₊₁: un número que dice qué tan bueno fue ese paso (+ por avanzar, − por chocar)."},
+    {n: ["ag"], e: [], text: "El agente aprende: ajusta π para que, sumando el futuro, la recompensa total sea la mayor posible. Y el ciclo se repite millones de veces."}]});
+DEMOS.vi = el => {
+  el.innerHTML = `<canvas></canvas><div class="ctrls"><button class="btn pri" data-a="step">Un paso de Bellman</button><button class="btn" data-a="play">Reproducir</button><button class="btn ghost" data-a="reset">Reiniciar</button>
+    <label>γ (descuento) <input type="range" min="0.5" max="0.99" step="0.01" value="0.9" data-k="g"><span class="mono" data-o="g">0.90</span></label>
+    <label>Resbalar <input type="range" min="0" max="0.4" step="0.05" value="0" data-k="slip"><span class="mono" data-o="slip">0.00</span></label></div>
+    <div class="read"><span data-o="it">iteración 0</span><span data-o="d">cambio máx —</span></div>`;
+  const cv = $("canvas", el), c = canvasCtx(cv, 560, 400); let V = new Float64Array(NS), it = 0, stop = () => {};
+  const g = () => +$("[data-k=g]", el).value, slip = () => +$("[data-k=slip]", el).value;
+  const q = (s, a) => { const sl = slip(); let t = 0; for (let b = 0; b < 4; b++){ const p = (b === a ? 1 - sl : 0) + sl / 4; const s2 = move(s, b); t += p * (rew(s2) + (isTerm(s2) ? 0 : g() * V[s2])); } return t; };
+  const pol = () => [...Array(NS)].map((_, s) => isWall(s) || isTerm(s) || it === 0 ? -1 : [0, 1, 2, 3].reduce((b, a) => q(s, a) > q(s, b) ? a : b, 0));
+  const draw = () => drawGrid(c, 560, 400, [...V], pol(), null);
+  const step = () => { const N = new Float64Array(NS); let d = 0; for (let s = 0; s < NS; s++){ if (isWall(s) || isTerm(s)) continue; N[s] = Math.max(...[0, 1, 2, 3].map(a => q(s, a))); d = Math.max(d, Math.abs(N[s] - V[s])); } V = N; it++;
+    $("[data-o=it]", el).textContent = `iteración ${it}`; $("[data-o=d]", el).textContent = `cambio máx ${d.toFixed(4)}`; draw(); return d; };
+  el.addEventListener("input", e => { const k = e.target.dataset.k; if (k){ $(`[data-o=${k}]`, el).textContent = (+e.target.value).toFixed(2); draw(); } });
+  el.addEventListener("click", e => { const a = e.target.dataset.a; if (!a) return;
+    if (a === "step") step(); if (a === "reset"){ stop(); V = new Float64Array(NS); it = 0; $("[data-o=it]", el).textContent = "iteración 0"; draw(); }
+    if (a === "play"){ stop(); let last = 0; stop = loop(() => { const t = performance.now(); if (t - last < (RM ? 600 : 350)) return; last = t; return step() > 1e-4 && it < 80; }); } });
+  draw(); return () => stop();
+};
+DEMOS.bandit = el => {
+  el.innerHTML = `<canvas></canvas><div class="legend"><span><i style="background:${cssv("--acc")}"></i>ε-greedy (ε = 0.1)</span><span><i style="background:${cssv("--marl")}"></i>UCB1</span><span><i style="background:${cssv("--warm")}"></i>Thompson sampling</span><span><i style="background:${cssv("--mut")}"></i>Al azar</span></div>
+    <div class="ctrls"><button class="btn pri" data-a="run">Jugar 1000 tiradas</button><button class="btn ghost" data-a="new">Máquinas nuevas</button></div><div class="read" data-o="info"></div>`;
+  const cv = $("canvas", el); let p, stop = () => {};
+  const fresh = () => { p = [...Array(6)].map(() => +(0.1 + Math.random() * 0.75).toFixed(2)); $("[data-o=info]", el).textContent = `Probabilidad oculta de premio por máquina: ${p.map(x => x.toFixed(2)).join(" · ")}`; lineChart(cv, [], {}); };
+  const strat = kind => ({n: Array(6).fill(0), w: Array(6).fill(0), a: Array(6).fill(1), b: Array(6).fill(1), t: 0, reg: 0, curve: [],
+    pick(){ this.t++; if (kind === "rand") return Math.floor(Math.random() * 6);
+      if (kind === "eps"){ if (Math.random() < .1 || this.t <= 6) return this.t <= 6 ? this.t - 1 : Math.floor(Math.random() * 6); const m = this.n.map((n, i) => n ? this.w[i] / n : 0); return m.indexOf(Math.max(...m)); }
+      if (kind === "ucb"){ if (this.t <= 6) return this.t - 1; const u = this.n.map((n, i) => this.w[i] / n + Math.sqrt(2 * Math.log(this.t) / n)); return u.indexOf(Math.max(...u)); }
+      const sm = this.a.map((a, i) => betaS(a, this.b[i])); return sm.indexOf(Math.max(...sm)); },
+    upd(i, r){ this.n[i]++; this.w[i] += r; if (r) this.a[i]++; else this.b[i]++; this.reg += Math.max(...p) - p[i]; this.curve.push(this.reg); }});
+  const gam = k => { let x = 0; for (let i = 0; i < k; i++) x -= Math.log(Math.random()); return x; };
+  const betaS = (a, b) => { const x = gam(a), y = gam(b); return x / (x + y); };
+  el.addEventListener("click", e => { const a = e.target.dataset.a; if (a === "new"){ stop(); fresh(); }
+    if (a === "run"){ stop(); const S = [strat("eps"), strat("ucb"), strat("ts"), strat("rand")]; let T = 0;
+      stop = loop(() => { for (let k = 0; k < (RM ? 50 : 8); k++){ T++; S.forEach(s => { const i = s.pick(); s.upd(i, Math.random() < p[i] ? 1 : 0); }); }
+        lineChart(cv, S.map((s, i) => ({data: s.curve, color: [cssv("--acc"), cssv("--marl"), cssv("--warm"), cssv("--mut")][i]})), {ymin: 0, xlabel: `tiradas: ${T} · arrepentimiento acumulado (menos es mejor)`});
+        const best = p.indexOf(Math.max(...p)); $("[data-o=info]", el).textContent = `Mejor máquina: n.º ${best + 1} (p = ${p[best].toFixed(2)}) · veces que la eligieron → ε-greedy ${S[0].n[best]}, UCB ${S[1].n[best]}, Thompson ${S[2].n[best]}, azar ${S[3].n[best]}`;
+        return T < 1000; }); } });
+  fresh(); return () => stop();
+};
+function qlearnDemo(el, dyna){
+  el.innerHTML = dyna ? `<div class="twin"><div><p class="eyebrow">Q-learning (sin modelo)</p><canvas data-c="a"></canvas></div><div><p class="eyebrow">Dyna-Q (con modelo, planifica)</p><canvas data-c="b"></canvas></div></div>
+    <canvas data-c="ch" style="margin-top:10px"></canvas><div class="legend"><span><i style="background:${cssv("--acc")}"></i>Q-learning</span><span><i style="background:${cssv("--marl")}"></i>Dyna-Q</span><span>pasos por episodio (menos es mejor)</span></div>
+    <div class="ctrls"><button class="btn pri" data-a="run">Correr 60 episodios</button><button class="btn ghost" data-a="reset">Reiniciar</button><label>Pasos de planificación n <input type="range" min="0" max="50" step="5" value="20" data-k="n"><span class="mono" data-o="n">20</span></label></div>`
+   : `<canvas data-c="a"></canvas><canvas data-c="ch" style="margin-top:10px"></canvas><div class="legend"><span><i style="background:${cssv("--acc")}"></i>retorno por episodio (promedio móvil de 10)</span></div>
+    <div class="ctrls"><button class="btn pri" data-a="run">Entrenar</button><button class="btn" data-a="pause">Pausa</button><button class="btn ghost" data-a="reset">Reiniciar</button>
+    <label>Velocidad <input type="range" min="1" max="200" value="${RM ? 60 : 15}" data-k="sp"><span class="mono" data-o="sp">${RM ? 60 : 15}</span></label>
+    <label>ε <input type="range" min="0" max="1" step="0.05" value="0.2" data-k="eps"><span class="mono" data-o="eps">0.20</span></label>
+    <label>α <input type="range" min="0.05" max="1" step="0.05" value="0.5" data-k="al"><span class="mono" data-o="al">0.50</span></label>
+    <label>γ <input type="range" min="0.5" max="0.99" step="0.01" value="0.95" data-k="g"><span class="mono" data-o="g">0.95</span></label></div>
+    <div class="read"><span data-o="ep">episodio 0</span><span data-o="last"></span></div>`;
+  const ca = canvasCtx($("[data-c=a]", el), 560, 400), cb = dyna ? canvasCtx($("[data-c=b]", el), 560, 400) : null, ch = $("[data-c=ch]", el);
+  const v = k => +($(`[data-k=${k}]`, el)?.value ?? 0);
+  let A, B, stop = () => {}, hist = [[], []];
+  const reset = () => { stop(); A = {ag: new QAgent(), s: sid(...GW.start), ep: 0, steps: 0, ret: 0}; B = {ag: new QAgent(), s: sid(...GW.start), ep: 0, steps: 0}; hist = [[], []]; draw(); lineChart(ch, [], {}); };
+  const draw = () => { drawGrid(ca, 560, 400, A.ag.V(), A.ag.P(), A.s, {nums: !dyna}); if (dyna) drawGrid(cb, 560, 400, B.ag.V(), B.ag.P(), B.s, {nums: false}); };
+  const tick = (X, idx) => { const eps = dyna ? 0.1 : v("eps"), al = dyna ? 0.5 : v("al"), g = dyna ? 0.95 : v("g");
+    const a = X.ag.act(X.s, eps), [s2, r, done] = envStep(X.s, a, 0); X.ag.upd(X.s, a, r, s2, done, al, g); X.steps++; X.ret = (X.ret || 0) + r;
+    if (dyna && idx === 1){ X.ag.model.set(X.s * 4 + a, [r, s2, done]); const keys = [...X.ag.model.keys()]; for (let k = 0; k < v("n"); k++){ const key = keys[Math.floor(Math.random() * keys.length)], [rr, ss, dd] = X.ag.model.get(key); X.ag.upd(Math.floor(key / 4), key % 4, rr, ss, dd, al, g); } }
+    X.s = s2;
+    if (done || X.steps >= 200){ hist[idx].push(dyna ? X.steps : X.ret); X.ep++; X.steps = 0; X.ret = 0; X.s = sid(...GW.start); return true; } return false; };
+  const ma = d => d.map((_, i) => { const w = d.slice(Math.max(0, i - 9), i + 1); return w.reduce((a, b) => a + b, 0) / w.length; });
+  el.addEventListener("input", e => { const k = e.target.dataset.k; if (k){ const o = $(`[data-o=${k}]`, el); if (o) o.textContent = k === "sp" || k === "n" ? e.target.value : (+e.target.value).toFixed(2); } });
+  el.addEventListener("click", e => { const a = e.target.dataset.a; if (!a) return; if (a === "reset") reset(); if (a === "pause") stop();
+    if (a === "run"){ stop(); let last = 0;
+      stop = loop(() => { const t = performance.now(); const sp = dyna ? 25 : v("sp"); if (sp < 20 && t - last < 600 / sp) return; last = t;
+        for (let k = 0; k < (dyna ? sp : (sp < 20 ? 1 : sp)); k++){ tick(A, 0); if (dyna) tick(B, 1); }
+        draw();
+        if (dyna) lineChart(ch, [{data: hist[0], color: cssv("--acc")}, {data: hist[1].slice(0, Math.max(hist[0].length, 1)), color: cssv("--marl")}], {ymin: 0, xlabel: `episodios: ${hist[0].length}`});
+        else { lineChart(ch, [{data: ma(hist[0]), color: cssv("--acc")}], {ymin: -2, ymax: 1, xlabel: `episodios: ${A.ep}`}); $("[data-o=ep]", el).textContent = `episodio ${A.ep}`; if (hist[0].length) $("[data-o=last]", el).textContent = `último retorno ${hist[0].at(-1).toFixed(2)}`; }
+        return dyna ? hist[0].length < 60 : true; }); } });
+  reset(); return () => stop();
+}
+DEMOS.ql = el => qlearnDemo(el, false);
+DEMOS.dyna = el => qlearnDemo(el, true);
+DEMOS.dqn = el => stepper(el, {w: 640, h: 300,
+  nodes: [{id: "en", x: 20, y: 110, w: 140, h: 70, t: "Entorno", sub: "simulador / robot"}, {id: "q", x: 250, y: 30, w: 160, h: 70, t: "Red Q(s,a; θ)", sub: "elige la acción"}, {id: "buf", x: 250, y: 200, w: 160, h: 70, t: "Buffer de repetición", sub: "(s, a, r, s′) guardados"}, {id: "tg", x: 470, y: 110, w: 150, h: 70, t: "Red objetivo θ⁻", sub: "copia lenta de θ"}],
+  edges: [{id: "act", d: "M250,65 C190,65 170,110 160,125", lx: 185, ly: 70, label: "acción"}, {id: "tr", d: "M160,165 C200,200 220,230 250,235", lx: 185, ly: 225, label: "transición"}, {id: "mb", d: "M330,200 L330,100", lx: 345, ly: 155, label: "minibatch"}, {id: "y", d: "M470,130 C440,110 430,80 410,70", lx: 470, ly: 92, label: "y = r + γ max Q′"}, {id: "cp", d: "M410,55 C470,40 520,70 540,110", lx: 520, ly: 45, label: "copiar cada C pasos", dash: true}],
+  steps: [{n: ["q", "en"], e: ["act"], text: "La red Q recibe el estado (por ejemplo, la lectura del LiDAR) y elige la acción con mayor valor, salvo cuando explora al azar (ε-greedy)."},
+    {n: ["en", "buf"], e: ["tr"], text: "Cada transición (estado, acción, recompensa, siguiente estado) se guarda en un buffer de repetición en vez de usarse una sola vez."},
+    {n: ["buf", "q"], e: ["mb"], text: "Para aprender se saca un minibatch al azar del buffer: eso rompe la correlación entre pasos seguidos y reutiliza la experiencia."},
+    {n: ["tg", "q"], e: ["y"], text: "El objetivo y = r + γ·max Q′(s′) lo calcula una red objetivo que cambia lento. Sin ella, la red persigue un blanco que se mueve y diverge."},
+    {n: ["q", "tg"], e: ["cp"], text: "Cada C pasos se copian los pesos a la red objetivo. Double DQN, Dueling, PER y Rainbow son mejoras sobre estas piezas."}]});
+DEMOS.pg = el => {
+  el.innerHTML = `<canvas></canvas><div class="legend"><span><i style="background:${cssv("--mut")}"></i>recompensa r(a)</span><span><i style="background:${cssv("--acc")}"></i>política π(a) = N(μ, σ)</span><span><i style="background:${cssv("--warm")}"></i>acciones probadas</span></div>
+    <div class="ctrls"><button class="btn pri" data-a="run">Entrenar</button><button class="btn" data-a="pause">Pausa</button><button class="btn ghost" data-a="reset">Reiniciar</button>
+    <label>Tasa de aprendizaje <input type="range" min="0.005" max="0.1" step="0.005" value="0.03" data-k="lr"><span class="mono" data-o="lr">0.030</span></label>
+    <label><input type="checkbox" data-k="base" checked> Usar línea base (restar el promedio)</label></div>
+    <div class="read"><span data-o="it"></span></div>`;
+  const cv = $("canvas", el), W = 560, H = 260, c = canvasCtx(cv, W, H); let mu, ls, it, S = [], stop = () => {};
+  const r = a => Math.exp(-((a - 2) ** 2) / 0.5) + 0.55 * Math.exp(-((a + 1.6) ** 2) / 0.35);
+  const X = a => 20 + (a + 4) / 8 * (W - 40), Y = v => H - 24 - v * (H - 50);
+  const reset = () => { stop(); mu = -2.6; ls = Math.log(0.6); it = 0; S = []; draw(); };
+  const draw = () => { c.clearRect(0, 0, W, H); const sg = Math.exp(ls);
+    c.strokeStyle = cssv("--line"); c.beginPath(); c.moveTo(20, Y(0)); c.lineTo(W - 20, Y(0)); c.stroke();
+    c.fillStyle = cssv("--mut"); c.font = "11px " + cssv("--f-mono"); [-4, -2, 0, 2, 4].forEach(a => c.fillText(String(a), X(a) - 4, H - 8));
+    c.strokeStyle = cssv("--mut"); c.lineWidth = 2; c.beginPath(); for (let a = -4; a <= 4; a += .02) a === -4 ? c.moveTo(X(a), Y(r(a))) : c.lineTo(X(a), Y(r(a))); c.stroke();
+    const pk = 1 / (sg * Math.sqrt(2 * Math.PI)), sc = .9 / Math.max(pk, 1); c.fillStyle = rgba(cssv("--acc"), .18); c.strokeStyle = cssv("--acc"); c.beginPath(); c.moveTo(X(-4), Y(0));
+    for (let a = -4; a <= 4; a += .02) c.lineTo(X(a), Y(pk * Math.exp(-((a - mu) ** 2) / (2 * sg * sg)) * sc)); c.lineTo(X(4), Y(0)); c.closePath(); c.fill(); c.stroke();
+    S.forEach(([a, v]) => { c.beginPath(); c.arc(X(a), Y(v), 3.5, 0, 7); c.fillStyle = cssv("--warm"); c.fill(); });
+    $("[data-o=it]", el).textContent = `iteración ${it} · μ = ${mu.toFixed(2)} · σ = ${sg.toFixed(2)} · recompensa media ${(S.reduce((s, x) => s + x[1], 0) / Math.max(1, S.length)).toFixed(3)}`; };
+  const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+  const step = () => { const sg = Math.exp(ls), lr = +$("[data-k=lr]", el).value; S = [...Array(16)].map(() => { const a = Math.max(-4, Math.min(4, mu + sg * gauss())); return [a, r(a)]; });
+    const b = $("[data-k=base]", el).checked ? S.reduce((s, x) => s + x[1], 0) / S.length : 0; let gm = 0, gs = 0;
+    S.forEach(([a, v]) => { const A = v - b; gm += A * (a - mu) / (sg * sg); gs += A * (((a - mu) ** 2) / (sg * sg) - 1); });
+    mu += lr * gm / S.length * 4; ls = Math.max(Math.log(0.08), Math.min(Math.log(2), ls + lr * gs / S.length * 2)); it++; draw(); };
+  el.addEventListener("input", e => { if (e.target.dataset.k === "lr") $("[data-o=lr]", el).textContent = (+e.target.value).toFixed(3); });
+  el.addEventListener("click", e => { const a = e.target.dataset.a; if (a === "reset") reset(); if (a === "pause") stop();
+    if (a === "run"){ stop(); let last = 0; stop = loop(() => { const t = performance.now(); if (t - last < (RM ? 400 : 90)) return; last = t; step(); return it < 400; }); } });
+  reset(); return () => stop();
+};
+DEMOS.ac = el => stepper(el, {w: 640, h: 290,
+  nodes: [{id: "act", x: 30, y: 30, w: 170, h: 70, t: "Actor", sub: "política π_θ (decide)"}, {id: "cri", x: 30, y: 190, w: 170, h: 70, t: "Crítico", sub: "valor V_φ o Q_φ (evalúa)"}, {id: "en", x: 430, y: 110, w: 180, h: 70, t: "Entorno", sub: "robot / simulador"}],
+  edges: [{id: "a", d: "M200,65 C320,65 360,100 430,130", lx: 320, ly: 58, label: "acción a"}, {id: "o", d: "M430,160 C360,200 320,225 200,225", lx: 320, ly: 238, label: "s′, r"}, {id: "td", d: "M115,190 L115,100", lx: 125, ly: 150, label: "ventaja / error TD δ"}],
+  steps: [{n: ["act", "en"], e: ["a"], text: "El actor es la política: mira el estado y propone una acción, que puede ser continua (velocidades, torques)."},
+    {n: ["en", "cri"], e: ["o"], text: "El entorno responde con el siguiente estado y la recompensa. El crítico los usa para estimar cuánto vale estar ahí."},
+    {n: ["cri", "act"], e: ["td"], text: "El crítico calcula la ventaja: si la acción salió mejor de lo esperado (δ > 0), el actor la vuelve más probable; si salió peor, menos."},
+    {n: ["act", "cri"], e: [], text: "PPO limita cuánto cambia el actor en cada paso (recorte) y es on-policy. SAC y TD3 son off-policy: reutilizan experiencia vieja y por eso piden menos muestras, clave en un robot real."}]});
+DEMOS.marl = el => stepper(el, {w: 640, h: 300,
+  nodes: [{id: "r1", x: 20, y: 20, w: 140, h: 60, t: "Robot 1", sub: "obs. local o₁"}, {id: "r2", x: 20, y: 120, w: 140, h: 60, t: "Robot 2", sub: "obs. local o₂"}, {id: "r3", x: 20, y: 220, w: 140, h: 60, t: "Robot 3", sub: "obs. local o₃"},
+    {id: "en", x: 250, y: 120, w: 140, h: 60, t: "Entorno", sub: "compartido"}, {id: "cc", x: 470, y: 110, w: 150, h: 80, t: "Crítico central", sub: "ve todo · solo entrenando"}],
+  edges: [{id: "e1", d: "M160,50 C210,60 230,120 250,140", lx: 205, ly: 70, label: "a₁"}, {id: "e2", d: "M160,150 L250,150", lx: 205, ly: 143, label: "a₂"}, {id: "e3", d: "M160,250 C210,240 230,180 250,160", lx: 205, ly: 235, label: "a₃"},
+    {id: "c", d: "M390,150 L470,150", lx: 430, ly: 140, label: "s global"}, {id: "g1", d: "M540,110 C520,30 260,20 160,40", lx: 360, ly: 22, label: "gradiente", dash: true}, {id: "g3", d: "M540,190 C520,280 260,290 160,260", lx: 360, ly: 292, label: "gradiente", dash: true}],
+  steps: [{n: ["r1", "r2", "r3", "en"], e: ["e1", "e2", "e3"], text: "Cada robot decide con lo que ve él mismo. Para el robot 1, los otros robots son parte de un entorno que cambia: por eso el aprendizaje independiente es inestable."},
+    {n: ["en", "cc"], e: ["c"], text: "CTDE: durante el entrenamiento (en simulación) un crítico central ve el estado completo y las acciones de todos."},
+    {n: ["cc", "r1", "r2", "r3"], e: ["g1", "g3"], text: "Ese crítico le dice a cada robot cuánto aportó su acción al resultado del equipo (asignación de crédito). Así funcionan MADDPG y MAPPO."},
+    {n: ["r1", "r2", "r3"], e: ["e1", "e2", "e3"], text: "En la ejecución el crítico desaparece: cada robot actúa solo con su observación local. QMIX hace algo parecido, pero descomponiendo un valor de equipo."}]});
+function stepper(el, sp){
+  const uid = "st" + Math.random().toString(36).slice(2, 7);
+  el.innerHTML = `<div class="stepper"><svg viewBox="0 0 ${sp.w} ${sp.h}" role="img" aria-label="Diagrama animado">
+    ${sp.edges.map(e => `<path id="${uid}${e.id}" class="edge${e.dash ? " dash" : ""}" data-e="${e.id}" d="${e.d}"/><text class="elab" data-el="${e.id}" x="${e.lx}" y="${e.ly}" text-anchor="middle">${esc(e.label)}</text>`).join("")}
+    ${sp.nodes.map(n => `<g class="node" data-n="${n.id}"><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="10"/><text x="${n.x + n.w / 2}" y="${n.y + n.h / 2 - 2}" text-anchor="middle">${esc(n.t)}</text><text class="sub" x="${n.x + n.w / 2}" y="${n.y + n.h / 2 + 16}" text-anchor="middle">${esc(n.sub || "")}</text></g>`).join("")}
+    <g data-pulses></g></svg>
+    <p class="cap" aria-live="polite"></p>
+    <div class="ctrls"><button class="btn" data-a="prev">Anterior</button><button class="btn pri" data-a="play">Reproducir</button><button class="btn" data-a="next">Siguiente</button><span class="mono note" data-o="k"></span></div></div>`;
+  let k = 0, timer = null;
+  const show = () => { const s = sp.steps[k];
+    $$(".node", el).forEach(g => g.classList.toggle("on", s.n.includes(g.dataset.n)));
+    $$("path.edge", el).forEach(p => p.classList.toggle("on", s.e.includes(p.dataset.e))); $$(".elab", el).forEach(t => t.classList.toggle("on", s.e.includes(t.dataset.el)));
+    $("[data-pulses]", el).innerHTML = RM ? "" : s.e.map(id => `<circle class="pulse" r="5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#${uid}${id}"/></animateMotion></circle>`).join("");
+    $(".cap", el).textContent = s.text; $("[data-o=k]", el).textContent = `paso ${k + 1} de ${sp.steps.length}`; };
+  const stopT = () => { clearInterval(timer); timer = null; const b = $("[data-a=play]", el); if (b) b.textContent = "Reproducir"; };
+  el.addEventListener("click", e => { const a = e.target.dataset.a; if (!a) return;
+    if (a === "next"){ stopT(); k = (k + 1) % sp.steps.length; show(); } if (a === "prev"){ stopT(); k = (k - 1 + sp.steps.length) % sp.steps.length; show(); }
+    if (a === "play"){ if (timer) return stopT(); e.target.textContent = "Pausa"; timer = setInterval(() => { k = (k + 1) % sp.steps.length; show(); }, 3200); } });
+  show(); return stopT;
+}
+
+/* ---- demos nuevas ---- */
+DEMOS.td = el => {
+  el.innerHTML = `<canvas data-c="v"></canvas><canvas data-c="e" style="margin-top:10px"></canvas>
+    <div class="legend"><span><i style="background:${cssv("--acc")}"></i>TD(0)</span><span><i style="background:${cssv("--warm")}"></i>Monte Carlo</span><span><i style="background:${cssv("--mut")}"></i>valor verdadero</span></div>
+    <div class="ctrls"><button class="btn pri" data-a="run">Correr 100 episodios (promedio de 50 corridas)</button>
+    <label>α de TD <input type="range" min="0.02" max="0.3" step="0.01" value="0.1" data-k="atd"><span class="mono" data-o="atd">0.10</span></label>
+    <label>α de MC <input type="range" min="0.01" max="0.1" step="0.01" value="0.02" data-k="amc"><span class="mono" data-o="amc">0.02</span></label></div>
+    <p class="note">Caminata aleatoria: 5 estados A–E entre dos salidas. Salir por la derecha da +1, por la izquierda 0. El valor verdadero de A…E es 1/6…5/6.</p>`;
+  const cv = $("[data-c=v]", el), ce = $("[data-c=e]", el); let stop = () => {};
+  const truth = [1, 2, 3, 4, 5].map(x => x / 6);
+  const run = (alpha, mc) => { const V = Array(5).fill(.5), err = []; for (let ep = 0; ep < 100; ep++){ let s = 2; const traj = [];
+      while (true){ const s2 = s + (Math.random() < .5 ? -1 : 1), r = s2 === 5 ? 1 : 0; traj.push(s);
+        if (!mc){ const v2 = (s2 < 0 || s2 > 4) ? 0 : V[s2]; V[s] += alpha * (r + v2 - V[s]); }
+        if (s2 < 0 || s2 > 4){ if (mc) traj.forEach(x => V[x] += alpha * (r - V[x])); break; } s = s2; }
+      err.push(Math.sqrt(V.reduce((a, v, i) => a + (v - truth[i]) ** 2, 0) / 5)); } return {V, err}; };
+  const bars = (Vt, Vm) => { const W = 520, H = 170, c = canvasCtx(cv, W, H); c.clearRect(0, 0, W, H); c.font = "11px " + cssv("--f-mono"); c.fillStyle = cssv("--mut");
+    ["A", "B", "C", "D", "E"].forEach((n, i) => { const x = 40 + i * 95; c.fillText(n, x + 30, H - 6);
+      [[truth[i], cssv("--mut")], [Vt[i], cssv("--acc")], [Vm[i], cssv("--warm")]].forEach(([v, col], k) => { c.fillStyle = col; const h = v * (H - 40); c.fillRect(x + k * 22, H - 22 - h, 18, h); }); c.fillStyle = cssv("--mut"); }); };
+  el.addEventListener("input", e => { const k = e.target.dataset.k; if (k) $(`[data-o=${k}]`, el).textContent = (+e.target.value).toFixed(2); });
+  el.addEventListener("click", e => { if (e.target.dataset.a !== "run") return; stop();
+    const at = +$("[data-k=atd]", el).value, am = +$("[data-k=amc]", el).value; const N = 50, et = Array(100).fill(0), em = Array(100).fill(0); let lt, lm;
+    for (let r = 0; r < N; r++){ const a = run(at, false), b = run(am, true); a.err.forEach((v, i) => et[i] += v / N); b.err.forEach((v, i) => em[i] += v / N); lt = a.V; lm = b.V; }
+    let k = 1; stop = loop(() => { k = Math.min(100, k + (RM ? 100 : 3)); lineChart(ce, [{data: et.slice(0, k), color: cssv("--acc")}, {data: em.slice(0, k), color: cssv("--warm")}], {ymin: 0, ymax: .3, xlabel: `episodios: ${k} · error RMS frente al valor verdadero`}); return k < 100; });
+    bars(lt, lm); });
+  bars(Array(5).fill(.5), Array(5).fill(.5)); lineChart(ce, [], {}); return () => stop();
+};
+DEMOS.cliff = el => {
+  el.innerHTML = `<div class="twin"><div><p class="eyebrow">Q-learning (off-policy)</p><canvas data-c="q"></canvas></div><div><p class="eyebrow">SARSA (on-policy)</p><canvas data-c="s"></canvas></div></div>
+    <canvas data-c="ch" style="margin-top:10px"></canvas><div class="legend"><span><i style="background:${cssv("--acc")}"></i>Q-learning</span><span><i style="background:${cssv("--marl")}"></i>SARSA</span><span>recompensa por episodio mientras aprende (promedio móvil de 20)</span></div>
+    <div class="ctrls"><button class="btn pri" data-a="run">Entrenar 400 episodios</button><label>ε <input type="range" min="0.01" max="0.3" step="0.01" value="0.1" data-k="eps"><span class="mono" data-o="eps">0.10</span></label></div>`;
+  const CW = 12, CH = 4, n = CW * CH, start = 3 * CW, goal = 3 * CW + 11, cliff = s => s > start && s < goal; let stop = () => {};
+  const mv = (s, a) => { let x = s % CW, y = Math.floor(s / CW); x += ACT[a][0]; y += ACT[a][1]; if (x < 0 || y < 0 || x >= CW || y >= CH) return s; return y * CW + x; };
+  const greedy = (Q, s) => { const q = Q.slice(s * 4, s * 4 + 4); return q.indexOf(Math.max(...q)); };
+  const pick = (Q, s, e) => Math.random() < e ? Math.floor(Math.random() * 4) : greedy(Q, s);
+  const episode = (Q, sarsa, e) => { let s = start, a = pick(Q, s, e), R = 0;
+    for (let t = 0; t < 500; t++){ let s2 = mv(s, a), r = -1; if (cliff(s2)){ r = -100; s2 = start; } R += r; const a2 = pick(Q, s2, e);
+      const tgt = s2 === goal ? r : r + (sarsa ? Q[s2 * 4 + a2] : Math.max(...Q.slice(s2 * 4, s2 * 4 + 4))); Q[s * 4 + a] += .5 * (tgt - Q[s * 4 + a]); s = s2; a = a2; if (s === goal) break; } return R; };
+  const draw = (cv, Q, col) => { const W = 520, H = 190, c = canvasCtx(cv, W, H), cs = Math.min(W / CW, H / CH); c.clearRect(0, 0, W, H);
+    for (let s = 0; s < n; s++){ const x = s % CW, y = Math.floor(s / CW); c.fillStyle = cliff(s) ? rgba(cssv("--bad"), .7) : s === goal ? rgba(cssv("--acc"), .8) : cssv("--panel"); c.fillRect(x * cs + 1, y * cs + 1, cs - 2, cs - 2); }
+    c.fillStyle = cssv("--mut"); c.font = "10px " + cssv("--f-mono"); c.fillText("inicio", 4, 3 * cs + cs / 2); c.fillStyle = "#fff"; c.fillText("acantilado (−100)", 3 * cs, 3 * cs + cs / 2 + 3);
+    if (!Q) return; let s = start; c.strokeStyle = col; c.lineWidth = 3; c.beginPath(); c.moveTo((s % CW + .5) * cs, (Math.floor(s / CW) + .5) * cs);
+    for (let k = 0; k < 40 && s !== goal; k++){ s = mv(s, greedy(Q, s)); if (cliff(s)) break; c.lineTo((s % CW + .5) * cs, (Math.floor(s / CW) + .5) * cs); } c.stroke(); };
+  el.addEventListener("input", e => { if (e.target.dataset.k) $("[data-o=eps]", el).textContent = (+e.target.value).toFixed(2); });
+  el.addEventListener("click", e => { if (e.target.dataset.a !== "run") return; stop(); const eps = +$("[data-k=eps]", el).value;
+    const Qq = new Float64Array(n * 4), Qs = new Float64Array(n * 4), hq = [], hs = [], ma = d => d.map((_, i) => { const w = d.slice(Math.max(0, i - 19), i + 1); return w.reduce((a, b) => a + b, 0) / w.length; });
+    stop = loop(() => { for (let k = 0; k < (RM ? 400 : 8); k++){ hq.push(episode(Qq, false, eps)); hs.push(episode(Qs, true, eps)); }
+      draw($("[data-c=q]", el), Qq, cssv("--acc")); draw($("[data-c=s]", el), Qs, cssv("--marl"));
+      lineChart($("[data-c=ch]", el), [{data: ma(hq), color: cssv("--acc")}, {data: ma(hs), color: cssv("--marl")}], {ymin: -120, ymax: 0, xlabel: `episodios: ${hq.length}`}); return hq.length < 400; }); });
+  draw($("[data-c=q]", el), null); draw($("[data-c=s]", el), null); lineChart($("[data-c=ch]", el), [], {}); return () => stop();
+};
+DEMOS.ppoclip = el => {
+  el.innerHTML = `<canvas></canvas><div class="legend"><span><i style="background:${cssv("--mut")}"></i>sin recorte: r·A</span><span><i style="background:${cssv("--acc")}"></i>objetivo de PPO: min(r·A, clip(r)·A)</span><span><i style="background:${rgba(cssv("--acc"), .25)}"></i>zona sin gradiente</span></div>
+    <div class="ctrls"><label>ε <input type="range" min="0.05" max="0.5" step="0.05" value="0.2" data-k="e"><span class="mono" data-o="e">0.20</span></label>
+    <label><input type="radio" name="sgnA" value="1" checked> Ventaja positiva (la acción fue buena)</label><label><input type="radio" name="sgnA" value="-1"> Ventaja negativa</label></div>
+    <p class="note">r = π_nueva(a|s) / π_vieja(a|s). Con ventaja positiva, PPO deja subir la probabilidad solo hasta 1+ε; con negativa, bajarla solo hasta 1−ε. Pasado ese punto el objetivo se vuelve plano y la actualización se detiene.</p>`;
+  const cv = $("canvas", el), W = 560, H = 240;
+  const draw = () => { const c = canvasCtx(cv, W, H), e = +$("[data-k=e]", el).value, A = +$("input[name=sgnA]:checked", el).value; $("[data-o=e]", el).textContent = e.toFixed(2);
+    const X = r => 40 + r / 2 * (W - 60), Y = v => H / 2 - v * (H / 2 - 24); c.clearRect(0, 0, W, H);
+    c.strokeStyle = cssv("--line"); c.beginPath(); c.moveTo(40, Y(0)); c.lineTo(W - 20, Y(0)); c.moveTo(X(1), 10); c.lineTo(X(1), H - 20); c.stroke();
+    c.fillStyle = rgba(cssv("--acc"), .14); if (A > 0) c.fillRect(X(1 + e), 10, X(2) - X(1 + e), H - 30); else c.fillRect(X(0), 10, X(1 - e) - X(0), H - 30);
+    c.fillStyle = cssv("--mut"); c.font = "11px " + cssv("--f-mono"); [0, .5, 1, 1.5, 2].forEach(r => c.fillText(r.toFixed(1), X(r) - 8, H - 4)); c.fillText("r", W - 16, Y(0) - 4);
+    const f = (r, clip) => { const rc = clip ? Math.min(Math.max(r, 1 - e), 1 + e) : r; return clip ? Math.min(r * A, rc * A) : r * A; };
+    [[false, cssv("--mut"), [5, 4]], [true, cssv("--acc"), []]].forEach(([cl, col, dash]) => { c.setLineDash(dash); c.strokeStyle = col; c.lineWidth = cl ? 3 : 2; c.beginPath();
+      for (let r = 0; r <= 2.0001; r += .01) r === 0 ? c.moveTo(X(r), Y(f(r, cl) / 2)) : c.lineTo(X(r), Y(f(r, cl) / 2)); c.stroke(); }); c.setLineDash([]); };
+  el.addEventListener("input", draw); draw();
+};
+DEMOS.hrl = el => stepper(el, {w: 640, h: 270,
+  nodes: [{id: "m", x: 30, y: 20, w: 180, h: 70, t: "Gerente (alto nivel)", sub: "decide cada k pasos"}, {id: "w", x: 30, y: 170, w: 180, h: 70, t: "Trabajador (bajo nivel)", sub: "decide cada paso"}, {id: "en", x: 440, y: 95, w: 170, h: 70, t: "Entorno", sub: "escombros, pasillos"}],
+  edges: [{id: "g", d: "M120,90 L120,170", lx: 165, ly: 135, label: "submeta g"}, {id: "a", d: "M210,205 C320,205 360,170 440,145", lx: 320, ly: 215, label: "acción a"}, {id: "s", d: "M440,115 C360,60 300,55 210,55", lx: 330, ly: 48, label: "estado + recompensa"}, {id: "ri", d: "M440,155 C380,250 280,250 210,225", lx: 330, ly: 258, label: "recompensa intrínseca: ¿llegó a g?", dash: true}],
+  steps: [{n: ["m"], e: [], text: "El gerente mira el estado y elige una submeta: por ejemplo, 'llega a la puerta del pasillo norte'. Solo decide cada k pasos, así razona a largo plazo."},
+    {n: ["m", "w"], e: ["g"], text: "El trabajador recibe la submeta y decide cada paso (velocidades, pasos de marcha) para alcanzarla."},
+    {n: ["w", "en"], e: ["a", "ri"], text: "El trabajador aprende con una recompensa intrínseca: qué tan cerca quedó de la submeta. No necesita entender la misión completa."},
+    {n: ["en", "m"], e: ["s"], text: "El gerente aprende con la recompensa real de la misión (encontrar víctimas) acumulada durante esos k pasos. Así la tarea larga se parte en tareas cortas."}]});
+DEMOS.dagger = el => stepper(el, {w: 640, h: 280,
+  nodes: [{id: "ex", x: 20, y: 20, w: 160, h: 64, t: "Experto", sub: "teleoperador / planificador"}, {id: "ds", x: 240, y: 20, w: 160, h: 64, t: "Dataset", sub: "(estado, acción)"}, {id: "pi", x: 460, y: 20, w: 160, h: 64, t: "Política π", sub: "aprendizaje supervisado"},
+    {id: "en", x: 460, y: 190, w: 160, h: 64, t: "Robot", sub: "ejecuta π"}, {id: "lab", x: 20, y: 190, w: 160, h: 64, t: "Experto etiqueta", sub: "qué habría hecho"}],
+  edges: [{id: "d1", d: "M180,52 L240,52", lx: 210, ly: 44, label: "demos"}, {id: "tr", d: "M400,52 L460,52", lx: 430, ly: 44, label: "entrenar"}, {id: "run", d: "M540,84 L540,190", lx: 575, ly: 140, label: "ejecutar"},
+    {id: "vis", d: "M460,222 L180,222", lx: 320, ly: 214, label: "estados que π visita"}, {id: "agg", d: "M100,190 C100,140 260,120 300,84", lx: 200, ly: 130, label: "agregar", dash: true}],
+  steps: [{n: ["ex", "ds"], e: ["d1"], text: "Behavior cloning: el experto conduce el robot y se guardan pares (estado, acción)."},
+    {n: ["ds", "pi"], e: ["tr"], text: "Se entrena la política como un clasificador o regresor: imitar la acción del experto en cada estado."},
+    {n: ["pi", "en"], e: ["run"], text: "Problema: al ejecutarla, un pequeño error lleva al robot a estados que el experto nunca visitó, y ahí la política no sabe qué hacer. Los errores se acumulan."},
+    {n: ["en", "lab"], e: ["vis"], text: "DAgger: se guardan los estados que visita la política y el experto dice qué habría hecho en cada uno."},
+    {n: ["lab", "ds"], e: ["agg"], text: "Esos ejemplos se agregan al dataset y se reentrena. Repetir corrige justo donde la política se equivoca."}]});
+DEMOS.teacher = el => stepper(el, {w: 640, h: 280,
+  nodes: [{id: "sim", x: 20, y: 20, w: 180, h: 70, t: "Simulación aleatorizada", sub: "fricción, masa, terreno, retardo"}, {id: "t", x: 240, y: 20, w: 170, h: 70, t: "Profesor", sub: "ve info privilegiada"}, {id: "s", x: 240, y: 180, w: 170, h: 70, t: "Alumno", sub: "solo sensores a bordo"}, {id: "real", x: 450, y: 180, w: 170, h: 70, t: "Go2 real", sub: "despliegue"}],
+  edges: [{id: "rl", d: "M200,55 L240,55", lx: 220, ly: 46, label: "RL (PPO)"}, {id: "dis", d: "M325,90 L325,180", lx: 380, ly: 138, label: "imitar acciones / latente"}, {id: "dr", d: "M110,90 C110,200 180,215 240,215", lx: 120, ly: 200, label: "mismos entornos"}, {id: "dep", d: "M410,215 L450,215", lx: 430, ly: 206, label: "zero-shot"}],
+  steps: [{n: ["sim"], e: [], text: "Aleatorización del dominio: miles de robots simulados, cada uno con física distinta. Así el robot real es solo una variación más."},
+    {n: ["sim", "t"], e: ["rl"], text: "El profesor se entrena con RL viendo información que el robot real no tiene: el mapa de alturas exacto, la fricción, la velocidad real."},
+    {n: ["t", "s", "sim"], e: ["dis", "dr"], text: "El alumno solo ve lo que verá el Go2 real (propiocepción, profundidad) y aprende a imitar al profesor, a menudo con una memoria (GRU/TCN) que estima lo que no ve."},
+    {n: ["s", "real"], e: ["dep"], text: "Se despliega el alumno directo en el robot real. Es la receta de ANYmal, de RMA y de casi toda la locomoción ágil actual."}]});
+DEMOS.shield = el => stepper(el, {w: 640, h: 250,
+  nodes: [{id: "pi", x: 20, y: 90, w: 150, h: 70, t: "Política RL", sub: "propone acción"}, {id: "f", x: 240, y: 90, w: 160, h: 70, t: "Filtro de seguridad", sub: "CBF / escudo"}, {id: "en", x: 470, y: 90, w: 150, h: 70, t: "Robot", sub: "entorno con personas"}, {id: "lag", x: 240, y: 10, w: 160, h: 56, t: "Multiplicador λ", sub: "precio del costo"}],
+  edges: [{id: "a", d: "M170,125 L240,125", lx: 205, ly: 116, label: "a_RL"}, {id: "sa", d: "M400,125 L470,125", lx: 435, ly: 116, label: "a segura"}, {id: "c", d: "M545,90 C540,30 450,30 400,38", lx: 480, ly: 24, label: "costo c (choques)"}, {id: "pen", d: "M240,38 C150,30 100,60 95,90", lx: 150, ly: 30, label: "r − λ·c", dash: true}],
+  steps: [{n: ["pi", "f"], e: ["a"], text: "La política propone una acción, por ejemplo una velocidad hacia adelante."},
+    {n: ["f", "en"], e: ["sa"], text: "Un filtro con funciones de barrera de control (CBF) la corrige lo mínimo para que el robot nunca entre a la zona prohibida, con garantías si el modelo es correcto."},
+    {n: ["en", "lag"], e: ["c"], text: "En RL con restricciones (CMDP) se mide un costo aparte de la recompensa: choques, caídas, cercanía a personas."},
+    {n: ["lag", "pi"], e: ["pen"], text: "PPO-Lagrangiano ajusta λ: si el costo supera el límite, λ sube y la política aprende a ser más prudente. CPO hace lo mismo con una región de confianza."}]});
+DEMOS.rlhf = el => stepper(el, {w: 640, h: 260,
+  nodes: [{id: "pt", x: 20, y: 20, w: 170, h: 64, t: "Modelo preentrenado", sub: "LLM o VLA"}, {id: "gen", x: 240, y: 20, w: 160, h: 64, t: "Genera respuestas", sub: "o trayectorias"}, {id: "pref", x: 450, y: 20, w: 170, h: 64, t: "Preferencias", sub: "humanos o reglas"},
+    {id: "rm", x: 450, y: 170, w: 170, h: 64, t: "Modelo de recompensa", sub: "o verificador"}, {id: "opt", x: 160, y: 170, w: 210, h: 64, t: "Ajuste con RL", sub: "PPO / GRPO / DPO"}],
+  edges: [{id: "g", d: "M190,52 L240,52", lx: 215, ly: 44, label: "muestrear"}, {id: "p", d: "M400,52 L450,52", lx: 425, ly: 44, label: "comparar"}, {id: "r", d: "M535,84 L535,170", lx: 575, ly: 130, label: "entrenar"}, {id: "o", d: "M450,202 L370,202", lx: 410, ly: 194, label: "recompensa"}, {id: "u", d: "M200,170 C180,130 110,110 105,84", lx: 130, ly: 125, label: "actualizar", dash: true}],
+  steps: [{n: ["pt", "gen"], e: ["g"], text: "Un modelo grande ya sabe mucho (lenguaje, visión, acciones), pero no sabe qué preferimos."},
+    {n: ["gen", "pref"], e: ["p"], text: "Se generan varias respuestas o trayectorias y alguien dice cuál es mejor. En razonamiento se usa un verificador automático (RLVR)."},
+    {n: ["pref", "rm"], e: ["r"], text: "Con esas comparaciones se entrena un modelo de recompensa (RLHF). DPO se salta este paso y optimiza directo con las preferencias."},
+    {n: ["rm", "opt", "pt"], e: ["o", "u"], text: "El modelo se ajusta con PPO o GRPO para maximizar esa recompensa sin alejarse demasiado del original. En robótica, lo mismo sirve para afinar modelos visión-lenguaje-acción o para que un LLM diseñe recompensas (Eureka)."}]});
+
+
+DEMOS.triad = el => stepper(el, {w: 640, h: 260,
+  nodes: [{id: "fa", x: 20, y: 20, w: 180, h: 64, t: "Aproximación", sub: "una red para todos los s"}, {id: "bs", x: 440, y: 20, w: 180, h: 64, t: "Bootstrapping", sub: "objetivo usa Q(s′)"}, {id: "op", x: 230, y: 180, w: 180, h: 64, t: "Off-policy", sub: "datos de otra política"}],
+  edges: [{id: "a", d: "M200,52 L440,52", lx: 320, ly: 44, label: "cambiar Q(s) mueve Q(s′)"}, {id: "b", d: "M530,84 C530,150 470,200 410,212", lx: 520, ly: 165, label: "el objetivo se mueve"}, {id: "c", d: "M230,212 C160,200 110,150 110,84", lx: 100, ly: 165, label: "nadie corrige el error"}],
+  steps: [{n: ["fa"], e: [], text: "Con una red, actualizar el valor de un estado cambia también el de estados parecidos. Eso es generalización, y es lo que queremos."},
+    {n: ["fa", "bs"], e: ["a"], text: "Pero el objetivo y = r + γ·max Q(s′) usa la misma red. Al mejorar Q(s) puede subir Q(s′), y entonces sube el objetivo."},
+    {n: ["bs", "op"], e: ["b"], text: "Si además los datos vienen de otra política, los estados donde Q crece mal pueden no visitarse nunca para corregirlos."},
+    {n: ["op", "fa"], e: ["c"], text: "Los tres juntos forman un ciclo que puede divergir. DQN lo rompe con la red objetivo (objetivo quieto) y el buffer (datos más variados)."}]});
+DEMOS.her = el => stepper(el, {w: 640, h: 250,
+  nodes: [{id: "s0", x: 20, y: 90, w: 120, h: 60, t: "Inicio", sub: "s₀"}, {id: "g2", x: 260, y: 20, w: 140, h: 60, t: "Llegó aquí", sub: "g′ = s_T"}, {id: "g", x: 500, y: 90, w: 120, h: 60, t: "Meta g", sub: "no alcanzada"}, {id: "buf", x: 250, y: 170, w: 160, h: 60, t: "Buffer", sub: "dos versiones"}],
+  edges: [{id: "tr", d: "M140,110 C190,60 220,50 260,50", lx: 170, ly: 50, label: "trayectoria"}, {id: "miss", d: "M400,50 C450,60 480,90 500,110", lx: 470, ly: 60, label: "falló", dash: true}, {id: "r1", d: "M560,150 C560,200 470,200 410,200", lx: 520, ly: 210, label: "r = −1 con g"}, {id: "r2", d: "M330,80 L330,170", lx: 395, ly: 130, label: "r = 0 con g′"}],
+  steps: [{n: ["s0", "g2"], e: ["tr"], text: "El robot debía llegar a la meta g, pero terminó en otro lugar."},
+    {n: ["g2", "g"], e: ["miss"], text: "Con recompensa escasa, ese episodio enseña muy poco: solo '−1, fallaste'."},
+    {n: ["g", "buf"], e: ["r1"], text: "HER guarda el episodio tal cual, con su meta original y recompensa de fracaso…"},
+    {n: ["g2", "buf"], e: ["r2"], text: "…y además una copia donde la meta era el lugar al que sí llegó. Esa copia es un éxito: la política condicionada por meta aprende a llegar a algún sitio, y de ahí generaliza."}]});
+DEMOS.reward = el => stepper(el, {w: 640, h: 250,
+  nodes: [{id: "w", x: 20, y: 20, w: 160, h: 60, t: "Escribir r", sub: "tarea + fallo"}, {id: "tr", x: 240, y: 20, w: 160, h: 60, t: "Entrenar poco", sub: "una o dos semillas"}, {id: "v", x: 460, y: 20, w: 160, h: 60, t: "Mirar videos", sub: "y cada término"}, {id: "h", x: 240, y: 170, w: 160, h: 60, t: "¿Hace trampa?", sub: "reward hacking"}],
+  edges: [{id: "a", d: "M180,50 L240,50", lx: 210, ly: 42, label: ""}, {id: "b", d: "M400,50 L460,50", lx: 430, ly: 42, label: ""}, {id: "c", d: "M540,80 C540,160 450,200 400,200", lx: 520, ly: 165, label: "algo raro"}, {id: "d", d: "M240,200 C120,200 100,140 100,80", lx: 110, ly: 165, label: "agregar UN término"}],
+  steps: [{n: ["w"], e: [], text: "Empieza con lo mínimo: el término de la tarea (área nueva, progreso) y una penalización si falla."},
+    {n: ["w", "tr"], e: ["a"], text: "Entrena un rato corto: no buscas el resultado final, buscas ver qué aprende."},
+    {n: ["tr", "v"], e: ["b"], text: "Mira cómo se comporta y registra cada término por separado. La curva total puede subir mientras el robot hace algo absurdo."},
+    {n: ["v", "h"], e: ["c"], text: "¿Gira en el lugar? ¿Se queda quieto? ¿Choca para terminar antes? Eso es el agente optimizando exactamente lo que escribiste."},
+    {n: ["h", "w"], e: ["d"], text: "Corrige con un solo término nuevo y repite. Al final, documenta la recompensa completa con sus pesos en el paper."}]});
+DEMOS.offline = el => stepper(el, {w: 640, h: 250,
+  nodes: [{id: "d", x: 20, y: 90, w: 150, h: 64, t: "Dataset fijo", sub: "acciones vistas"}, {id: "q", x: 245, y: 90, w: 150, h: 64, t: "Crítico Q", sub: "aprende de D"}, {id: "pi", x: 470, y: 20, w: 150, h: 64, t: "Política", sub: "busca el max"}, {id: "fix", x: 470, y: 170, w: 150, h: 64, t: "Conservador", sub: "CQL / IQL / TD3+BC"}],
+  edges: [{id: "a", d: "M170,122 L245,122", lx: 207, ly: 114, label: ""}, {id: "b", d: "M395,110 C430,90 440,60 470,52", lx: 420, ly: 60, label: "max Q"}, {id: "c", d: "M545,84 C545,120 450,140 395,130", lx: 520, ly: 125, label: "acción no vista", dash: true}, {id: "f", d: "M395,135 C430,160 440,190 470,200", lx: 420, ly: 200, label: "quedarse cerca de D"}],
+  steps: [{n: ["d", "q"], e: ["a"], text: "El crítico aprende Q solo con las transiciones del dataset."},
+    {n: ["q", "pi"], e: ["b"], text: "La política elige la acción con mayor Q, incluidas acciones que nunca aparecen en los datos."},
+    {n: ["pi", "q"], e: ["c"], text: "Para esas acciones, Q es una extrapolación arbitraria y suele ser demasiado alta. Sin interactuar, nadie corrige el error y la política se va hacia allá."},
+    {n: ["q", "fix"], e: ["f"], text: "La solución es ser conservador: bajar Q fuera de los datos (CQL), no consultar acciones fuera de los datos (IQL) o castigar alejarse de ellas (TD3+BC)."}]});
+DEMOS.qmix = el => stepper(el, {w: 640, h: 280,
+  nodes: [{id: "a1", x: 20, y: 20, w: 140, h: 56, t: "Go2 #1", sub: "Q₁(o₁, a₁)"}, {id: "a2", x: 20, y: 110, w: 140, h: 56, t: "Go2 #2", sub: "Q₂(o₂, a₂)"}, {id: "a3", x: 20, y: 200, w: 140, h: 56, t: "Go2 #3", sub: "Q₃(o₃, a₃)"},
+    {id: "mix", x: 270, y: 100, w: 150, h: 76, t: "Mezcladora", sub: "pesos ≥ 0"}, {id: "hyp", x: 270, y: 10, w: 150, h: 56, t: "Hiperred", sub: "lee el estado global s"}, {id: "tot", x: 490, y: 110, w: 145, h: 56, t: "Q_tot", sub: "valor del equipo"}],
+  edges: [{id: "e1", d: "M160,48 C220,60 230,120 270,130", lx: 0, ly: 0, label: ""}, {id: "e2", d: "M160,138 L270,138", lx: 0, ly: 0, label: ""}, {id: "e3", d: "M160,228 C220,220 230,160 270,150", lx: 0, ly: 0, label: ""}, {id: "h", d: "M345,66 L345,100", lx: 385, ly: 88, label: "pesos"}, {id: "t", d: "M420,138 L490,138", lx: 460, ly: 130, label: ""}, {id: "back", d: "M560,166 C560,260 200,270 120,256", lx: 380, ly: 262, label: "gradiente del error TD de equipo", dash: true}],
+  steps: [{n: ["a1", "a2", "a3"], e: [], text: "Cada Go2 tiene su red Qᵢ que solo ve su observación local. Al desplegar, cada uno elige su acción con argmax de su Qᵢ, sin hablar con nadie."},
+    {n: ["a1", "a2", "a3", "mix"], e: ["e1", "e2", "e3"], text: "Al entrenar, los Qᵢ entran a una red mezcladora."},
+    {n: ["hyp", "mix"], e: ["h"], text: "Los pesos de la mezcladora los genera una hiperred a partir del estado global (solo existe en simulación). Se fuerzan a ser no negativos: así Q_tot es monótona en cada Qᵢ."},
+    {n: ["mix", "tot"], e: ["t"], text: "Monotonía significa que si cada robot mejora su Qᵢ, el equipo mejora. Por eso los argmax individuales son el argmax conjunto (IGM)."},
+    {n: ["tot", "a1", "a2", "a3"], e: ["back"], text: "Solo se usa la recompensa de equipo: el error TD de Q_tot se propaga hacia atrás y cada Qᵢ aprende cuánto aporta. Así se reparte el crédito."}]});
+DEMOS.ctde = el => stepper(el, {w: 640, h: 280,
+  nodes: [{id: "p1", x: 20, y: 30, w: 150, h: 60, t: "Actor Go2 #1", sub: "π(a₁ | o₁)"}, {id: "p2", x: 20, y: 180, w: 150, h: 60, t: "Actor Go2 #2", sub: "π(a₂ | o₂)"}, {id: "en", x: 250, y: 105, w: 140, h: 64, t: "Entorno", sub: "mapa compartido"}, {id: "cr", x: 470, y: 105, w: 150, h: 64, t: "Crítico central", sub: "V(s global)"}],
+  edges: [{id: "a1", d: "M170,60 C210,70 220,110 250,125", lx: 215, ly: 70, label: "a₁"}, {id: "a2", d: "M170,210 C210,200 220,160 250,150", lx: 215, ly: 210, label: "a₂"}, {id: "s", d: "M390,137 L470,137", lx: 430, ly: 129, label: "s, r"}, {id: "g1", d: "M545,105 C545,30 300,20 170,50", lx: 360, ly: 22, label: "ventaja Â", dash: true}, {id: "g2", d: "M545,169 C545,250 300,260 170,220", lx: 360, ly: 262, label: "ventaja Â", dash: true}],
+  steps: [{n: ["p1", "p2"], e: [], text: "Cada Go2 tiene un actor que solo ve su observación local (LiDAR, su pose, su parte del mapa). Con parámetros compartidos, es la misma red."},
+    {n: ["p1", "p2", "en"], e: ["a1", "a2"], text: "Ambos actúan en el entorno simulado."},
+    {n: ["en", "cr"], e: ["s"], text: "En simulación tenemos el estado global: el crítico central lo ve todo, así que no sufre la no estacionariedad."},
+    {n: ["cr", "p1", "p2"], e: ["g1", "g2"], text: "El crítico calcula las ventajas y con ellas se actualiza cada actor (MAPPO usa PPO-clip; MADDPG usa ∇ₐQ)."},
+    {n: ["p1", "p2"], e: [], text: "Al desplegar en los Go2 reales, el crítico se tira: cada robot corre solo su actor. Entrenamiento centralizado, ejecución descentralizada."}]});
+DEMOS.debug = el => stepper(el, {w: 640, h: 260,
+  nodes: [{id: "env", x: 20, y: 20, w: 170, h: 60, t: "1 · Entorno", sub: "escalas, recompensa, fin"}, {id: "triv", x: 235, y: 20, w: 170, h: 60, t: "2 · Caso trivial", sub: "meta a 1 m"}, {id: "known", x: 450, y: 20, w: 170, h: 60, t: "3 · Entorno conocido", sub: "CartPole, Pendulum"}, {id: "mon", x: 450, y: 170, w: 170, h: 60, t: "4 · Métricas", sub: "entropía, KL, var. expl."}, {id: "vid", x: 235, y: 170, w: 170, h: 60, t: "5 · Video", sub: "¿qué hace de verdad?"}, {id: "one", x: 20, y: 170, w: 170, h: 60, t: "6 · Un cambio", sub: "y comparar"}],
+  edges: [{id: "a", d: "M190,50 L235,50", lx: 0, ly: 0, label: ""}, {id: "b", d: "M405,50 L450,50", lx: 0, ly: 0, label: ""}, {id: "c", d: "M535,80 L535,170", lx: 0, ly: 0, label: ""}, {id: "d", d: "M450,200 L405,200", lx: 0, ly: 0, label: ""}, {id: "e", d: "M235,200 L190,200", lx: 0, ly: 0, label: ""}, {id: "f", d: "M105,170 L105,80", lx: 140, ly: 130, label: "repetir", dash: true}],
+  steps: [{n: ["env"], e: [], text: "Revisa el entorno antes que el algoritmo: imprime rangos de observaciones, dispara la recompensa a mano, separa terminado de truncado."},
+    {n: ["triv"], e: ["a"], text: "Haz que aprenda la versión más fácil posible. Si no aprende eso, el problema no es la dificultad."},
+    {n: ["known"], e: ["b"], text: "Corre tu mismo código en un entorno estándar. Si ahí falla, el error está en tu implementación."},
+    {n: ["mon"], e: ["c"], text: "Durante el entrenamiento mira entropía, varianza explicada del crítico, KL y fracción recortada, cada término de la recompensa."},
+    {n: ["vid"], e: ["d"], text: "Mira videos. Muchas veces el agente encontró un atajo que ninguna métrica muestra."},
+    {n: ["one", "env"], e: ["e", "f"], text: "Cambia una sola cosa, con semilla fija y una corrida de referencia, y vuelve a empezar."}]});
+DEMOS.evalp = el => stepper(el, {w: 640, h: 250,
+  nodes: [{id: "tr", x: 20, y: 20, w: 170, h: 60, t: "Mapas de entrenamiento", sub: "N semillas"}, {id: "te", x: 235, y: 20, w: 170, h: 60, t: "Mapas de prueba", sub: "nunca vistos"}, {id: "bl", x: 450, y: 20, w: 170, h: 60, t: "Líneas base", sub: "clásica + RL"}, {id: "st", x: 450, y: 170, w: 170, h: 60, t: "Estadística", sub: "IQM ± IC 95 %"}, {id: "hw", x: 235, y: 170, w: 170, h: 60, t: "Robot real", sub: "corridas y fallos"}, {id: "rep", x: 20, y: 170, w: 170, h: 60, t: "Reporte", sub: "hiperparámetros, r, código"}],
+  edges: [{id: "a", d: "M190,50 L235,50", lx: 0, ly: 0, label: ""}, {id: "b", d: "M405,50 L450,50", lx: 0, ly: 0, label: ""}, {id: "c", d: "M535,80 L535,170", lx: 0, ly: 0, label: ""}, {id: "d", d: "M450,200 L405,200", lx: 0, ly: 0, label: ""}, {id: "e", d: "M235,200 L190,200", lx: 0, ly: 0, label: ""}],
+  steps: [{n: ["tr"], e: [], text: "Entrena con 5 a 10 semillas; guarda configuración y versión de todo."},
+    {n: ["te"], e: ["a"], text: "Evalúa en mapas distintos a los de entrenamiento, y con más robots de los que entrenaste, para medir generalización y escala."},
+    {n: ["bl"], e: ["b"], text: "Compara con un método clásico fuerte (fronteras, subastas) y con otra línea base de RL (IPPO vs MAPPO)."},
+    {n: ["st"], e: ["c"], text: "Resume con IQM e intervalos por bootstrap (librería rliable), no con la mejor semilla."},
+    {n: ["hw"], e: ["d"], text: "Valida en hardware y reporta cuántas corridas, condiciones y fallos. En el corpus solo el 28,9 % lo hace, y 15,8 % en MARL."},
+    {n: ["rep"], e: ["e"], text: "Publica hiperparámetros, la recompensa con pesos y el código. El corpus promedia 2,6 de 6 en estas prácticas: aquí puedes destacar."}]});
+/* ---- contenido de las lecciones ---- */
+let LESSONS = [];
+const MODS = () => [...new Set(LESSONS.map(l => l.mod))];
+function doneSet(){ try { return new Set(JSON.parse(localStorage.getItem("atlas-done") || "[]")); } catch { return new Set(); } }
+function markDone(id){ const s = doneSet(); s.add(id); try { localStorage.setItem("atlas-done", JSON.stringify([...s])); } catch {} renderLessonList(); renderPath(); const m = $("#donebadge"); if (m) m.hidden = false; }
+let curLesson = null;
+function renderLessonList(){
+  const d = doneSet(); let mv = "", h = "";
+  LESSONS.forEach((l, i) => { if (l.mod !== mv){ mv = l.mod; const ls = LESSONS.filter(x => x.mod === mv), k = ls.filter(x => d.has(x.id)).length; h += `<div class="lv">${esc(mv)} <span class="mono">${k}/${ls.length}</span></div>`; }
+    h += `<button data-les="${l.id}" aria-current="${l.id === curLesson}"><span>${i + 1}. ${esc(l.t)}</span>${d.has(l.id) ? '<small class="done-mark">✓</small>' : ""}</button>`; });
+  h += `<div class="lv">Referencia</div><button data-les="__gloss" aria-current="${curLesson === "__gloss"}"><span>Glosario completo</span></button>`;
+  $("#lessons").innerHTML = h;
+}
+$("#lessons").addEventListener("click", e => { const b = e.target.closest("[data-les]"); if (b) openLesson(b.dataset.les); });
+function openGloss(){
+  stopDemo(); stopDemo = () => {}; curLesson = "__gloss"; renderLessonList();
+  const all = []; LESSONS.forEach((l, i) => Object.entries(l.gloss || {}).forEach(([k, v]) => all.push({k, v, i, id: l.id})));
+  all.sort((a, b) => a.k.localeCompare(b.k, "es"));
+  $("#lesson").innerHTML = `<div class="lesson"><p class="eyebrow">Referencia · ${all.length} términos</p><h2>Glosario</h2>
+    <input id="gq" type="search" placeholder="Buscar un término…" aria-label="Buscar en el glosario" style="width:100%;max-width:420px;margin:6px 0 12px">
+    <dl class="gloss" id="gl">${all.map(g => `<div data-t="${esc((g.k + " " + g.v).toLowerCase())}"><dt>${esc(g.k)}</dt><dd>${esc(g.v)} <a href="#" data-les-go="${g.id}" class="note">lección ${g.i + 1}</a></dd></div>`).join("")}</dl></div>`;
+  $("#gq").addEventListener("input", e => { const q = e.target.value.toLowerCase().trim(); $$("#gl > div").forEach(d => d.hidden = q && !d.dataset.t.includes(q)); });
+  state.ctx = {type: "leccion", name: "Glosario"}; window.scrollTo({top: 0});
+}
+function openLesson(id){
+  if (id === "__gloss") return openGloss();
+  stopDemo(); curLesson = id; try { localStorage.setItem("atlas-les", id); } catch {}
+  const i = LESSONS.findIndex(l => l.id === id), l = LESSONS[i]; renderLessonList();
+  const ents = l.algs.map(entByName).filter(x => x >= 0);
+  const ex = P.filter(p => p.a.some(a => ents.includes(a))).sort((a, b) => ((b.w === 1 || b.w === 2) - (a.w === 1 || a.w === 2)) || b.c - a.c).slice(0, 4);
+  const tot = new Set(P.filter(p => p.a.some(a => ents.includes(a))).map(p => p.i)).size;
+  const done = doneSet().has(l.id);
+  $("#lesson").innerHTML = `<div class="lesson"><p class="eyebrow">Lección ${i + 1} de ${LESSONS.length} · ${esc(l.mod)}</p><h2>${esc(l.t)}</h2>
+    <nav class="toc" aria-label="Secciones">${["Idea", l.demo ? "Simulación" : "", "Matemática", "Algoritmo", "Consejos", "En tu Go2", "En el corpus", "Lecturas", "Prueba"].filter(Boolean).map(x => `<a href="#s-${x.replace(/\s/g, "")}">${x}</a>`).join("")}</nav>
+    <section id="s-Idea" class="prose">${l.idea}</section>
+    ${l.demo ? `<section id="s-Simulación"><h3>Simulación</h3><div class="demo" id="demo"></div></section>` : ""}
+    <section id="s-Matemática"><h3>La matemática</h3>${l.math.map(([f, x]) => `<div class="mblock"><div class="formula">${esc(f)}</div><p>${esc(x)}</p></div>`).join("")}</section>
+    <section id="s-Algoritmo"><h3>El algoritmo paso a paso</h3><pre class="pseudo">${esc(l.pseudo)}</pre></section>
+    <section id="s-Consejos"><h3>Consejos prácticos</h3><ul class="tips">${l.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></section>
+    <section id="s-EntuGo2" class="panel go2"><h3>En tu Go2 y tu tesis</h3>${l.go2}</section>
+    <section id="s-Enelcorpus" class="panel" style="margin-top:14px"><h3>En el corpus</h3><p class="note" style="margin:0 0 8px">${fmt(tot)} papers usan alguno de estos métodos. Toca uno para ver sus papers.</p>
+      <div class="chips" style="margin-bottom:8px">${ents.map(i => `<span class="chip alg" data-alg="${i}">${esc(ent(i).n)} · ${fmt(ent(i).cnt)}</span>`).join("")}</div>
+      ${ex.length ? `<p class="note" style="margin:8px 0 6px">Ejemplos (primero los validados en robot real):</p><div class="list">${ex.map(paperRow).join("")}</div>` : ""}</section>
+    <section id="s-Lecturas"><h3>Para leer</h3><ol class="reads">${l.read.map(r => `<li>${esc(r)}</li>`).join("")}</ol></section>
+    ${Object.keys(l.gloss || {}).length ? `<details class="glossbox"><summary>Términos de esta lección (${Object.keys(l.gloss).length})</summary><dl class="gloss">${Object.entries(l.gloss).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></details>` : ""}
+    <section class="quiz" id="s-Prueba"><h3>Comprueba lo que aprendiste</h3><p class="note" id="qscore">0 de ${l.quiz.length} correctas${done ? " · ya completaste esta lección" : ""}</p>${l.quiz.map((q, k) => `<div class="qq" data-q="${k}"><p>${k + 1}. ${esc(q.q)}</p><div class="qopts">${q.o.map((o, j) => `<button class="o" data-j="${j}">${esc(o)}</button>`).join("")}</div><div class="fb" hidden></div></div>`).join("")}
+      <p class="done-note" id="donebadge" hidden>✓ Lección completada</p></section>
+    <div class="flex sp" style="margin-top:14px">${i > 0 ? `<button class="btn" data-les-go="${LESSONS[i - 1].id}">← ${esc(LESSONS[i - 1].t)}</button>` : "<span></span>"}
+      <button class="btn ghost" data-askctx="1">Preguntarle al tutor</button>${i < LESSONS.length - 1 ? `<button class="btn pri" data-les-go="${LESSONS[i + 1].id}">${esc(LESSONS[i + 1].t)} →</button>` : `<button class="btn pri" data-go="guia">Ir a la guía para elegir →</button>`}</div></div>`;
+  $$("#lesson .toc a").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = $(a.getAttribute("href")); if (t) t.scrollIntoView({behavior: RM ? "auto" : "smooth", block: "start"}); }));
+  state.ctx = {type: "leccion", name: l.t};
+  if (l.demo && DEMOS[l.demo]) stopDemo = DEMOS[l.demo]($("#demo")) || (() => {});
+  else stopDemo = () => {};
+  const right = new Set();
+  $("#s-Prueba").addEventListener("click", e => { const b = e.target.closest("button.o"); if (!b) return; const qq = b.closest(".qq"), k = +qq.dataset.q, q = l.quiz[k], ok = +b.dataset.j === q.ok;
+    $$("button.o", qq).forEach(x => x.classList.remove("ok", "no")); b.classList.add(ok ? "ok" : "no");
+    const fb = $(".fb", qq); fb.hidden = false; fb.textContent = (ok ? "Correcto. " : "No exactamente. ") + q.why;
+    if (ok) right.add(k); else right.delete(k);
+    $("#qscore").textContent = `${right.size} de ${l.quiz.length} correctas`;
+    if (right.size === l.quiz.length) markDone(l.id); });
+  window.scrollTo({top: 0});
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-les-go]"); if (b){ e.preventDefault(); if (state.tab !== "aprende"){ curLesson = b.dataset.lesGo; go("aprende"); } openLesson(b.dataset.lesGo); } });
+function renderPath(){
+  const d = doneSet(), el = $("#path"); if (!el) return;
+  const nxt = LESSONS.find(l => !d.has(l.id));
+  el.innerHTML = `<div class="flex sp"><h2 style="margin:0">Tu curso de RL: de cero a tu tesis</h2><span class="mono note">${d.size} de ${LESSONS.length} lecciones</span></div>
+    <div class="prog"><div style="width:${d.size / LESSONS.length * 100}%"></div></div>
+    ${nxt ? `<p style="margin:0 0 10px">Sigue con: <a href="#" data-les-go="${nxt.id}"><b>${LESSONS.indexOf(nxt) + 1}. ${esc(nxt.t)}</b></a></p>` : `<p>Completaste todo el curso. Ahora: el mapa, la guía y el tutor.</p>`}
+    <div class="mods">${MODS().map(m => { const ls = LESSONS.filter(l => l.mod === m), k = ls.filter(l => d.has(l.id)).length;
+      return `<div class="mod"><div class="flex sp"><b>${esc(m)}</b><span class="mono note">${k}/${ls.length}</span></div><div class="prog sm"><div style="width:${k / ls.length * 100}%"></div></div>
+        <ol>${ls.map(l => `<li class="${d.has(l.id) ? "done" : ""}"><a href="#" data-les-go="${l.id}">${esc(l.t)}</a>${d.has(l.id) ? " ✓" : ""}</li>`).join("")}</ol></div>`; }).join("")}</div>`;
+}
+function countUp(){ if (RM) return; $$("#stats .v").forEach(el => { const txt = el.textContent, num = parseFloat(txt.replace(/\./g, "").replace(",", ".")); if (isNaN(num)) return; const suf = txt.includes("%") ? " %" : "", t0 = performance.now();
+  const f = t => { const k = Math.min(1, (t - t0) / 900), v = num * (1 - Math.pow(1 - k, 3)); el.textContent = fmt(Math.round(v)) + suf; if (k < 1) requestAnimationFrame(f); else el.textContent = txt; }; requestAnimationFrame(f); }); }
+
+/* ---------------- init ---------------- */
+function initAll(){
+  renderHome(); renderPath(); renderLessonList(); countUp(); initPaperFilters(); renderAreas(); initSurveys(); initGuide(); initTutor();
+  state.branch = [...branches().keys()][2]; renderBranch();
+  let t = (location.hash || "").slice(1); if (!t){ try { t = localStorage.getItem("atlas-tab") || ""; } catch {} }
+  go(["inicio","aprende","mapa","papers","apps","surveys","guia","tutor"].includes(t) ? t : "inicio");
+}
+load().catch(err => { $("#app").innerHTML = `<p class="panel">No pude cargar los datos (${esc(err.message)}). Recarga la página.</p>`; });
+})();
+</script>
+
+</body></html>
